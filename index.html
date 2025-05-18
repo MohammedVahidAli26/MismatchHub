@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>MismatchHub
+</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<body>
+          <div id="toggleBtn" title="Toggle Sidebar">&#9776;</div>
+
+
+<div id="sidebar">
+
+  <h2>Upload Excel</h2>
+  <input type="file" id="fileInput" accept=".xlsx,.xls" />
+
+  <h3>Row Groupings</h3>
+
+  <label>Row 1 - Name</label>
+  <select id="row1_col1"><option value="">-- No selection --</option></select>
+  <select id="row1_col2"><option value="">-- No selection --</option></select>
+
+  <label>Row 2 - Short Description</label>
+  <select id="row2_col1"><option value="">-- No selection --</option></select>
+  <select id="row2_col2"><option value="">-- No selection --</option></select>
+
+  <label>Row 3 - Long Description</label>
+  <select id="row3_col1"><option value="">-- No selection --</option></select>
+  <select id="row3_col2"><option value="">-- No selection --</option></select>
+
+  <label>Row 4 - Single Images</label>
+  <select id="row4_col1"><option value="">-- No selection --</option></select>
+  <select id="row4_col2"><option value="">-- No selection --</option></select>
+
+  <label>Row 5 - Multiple Images</label>
+  <select id="row5_col1"><option value="">-- No selection --</option></select>
+  <select id="row5_col2"><option value="">-- No selection --</option></select>
+
+<label class="switch">
+  <input type="checkbox" id="highlightToggle" />
+  <span class="slider round"></span>
+</label>
+<span class="toggle-label">Age Group Words</span>
+<label class="switch">
+  <input type="checkbox" id="genderHighlightToggle" />
+  <span class="slider round"></span>
+</label>
+<span class="toggle-label">Gender Words</span>
+<br>
+<label class="switch">
+  <input type="checkbox" id="othersHighlightToggle" />
+  <span class="slider round"></span>
+</label>
+<span class="toggle-label">Common Words</span>
+
+
+
+</div>
+
+<div id="content">
+ <div id="pageHeader">
+  <div id="pageInfoContainer">
+    <div id="pageInfo">Row 1 / 1</div>
+    <div id="jumpControls">
+      <label for="jumpInput">Jump to row:</label>
+      <input type="number" id="jumpInput" min="2" placeholder="Row #" />
+      <button id="jumpBtn">Go</button>
+    </div>
+  </div>
+</div>
+
+  <div id="mainContainer"></div>
+  <div id="navButtons">
+    <button id="prevBtn" disabled>Previous</button>
+    <button id="nextBtn" disabled>Next</button>
+  </div>
+</div>
+
+
+
+
+<!-- Modal for image view -->
+<div id="modal" tabindex="0" aria-modal="true" role="dialog">
+  <div id="modalContent">
+    <span id="modalClose" title="Close">&times;</span>
+    <img id="modalImage" src="" alt="Expanded view" />
+    <div id="modalNavPrev" title="Previous">&#10094;</div>
+    <div id="modalNavNext" title="Next">&#10095;</div>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
