@@ -6,7 +6,6 @@
   let currentIndex = 0;
 
   const selectorsIds = [
-    'filter'
     'row1_col1','row1_col2',
     'row2_col1','row2_col2',
     'row3_col1','row3_col2',
