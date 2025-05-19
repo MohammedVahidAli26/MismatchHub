@@ -74,7 +74,17 @@ updateTogglePosition(); // Call on page load
     };
     reader.readAsArrayBuffer(file);
   }
-
+ function populateFilterOptions(data) {
+      const filter = document.getElementById("filter");
+      filter.innerHTML = '<option value="">All</option>';
+      const productTypes = [...new Set(data.map((item) => item["Product Type"]))];
+      productTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        filter.appendChild(option);
+      });
+    }
   function populateSelectors() {
     selectorsIds.forEach(id => {
       const sel = document.getElementById(id);
