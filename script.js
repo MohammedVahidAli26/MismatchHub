@@ -5,8 +5,6 @@
   let currentImages = [];
   let currentIndex = 0;
 
-let uniqueIdColumn = '';
-let filteredData = [];
 
 
   const selectorsIds = [
@@ -26,52 +24,6 @@ let filteredData = [];
     };
   };
 
-
-function populateUniqueIdSelector() {
-  const filterSelect = document.getElementById('filter');
-  filterSelect.innerHTML = '<option value="">-- Select Unique ID Column --</option>';
-
-  headers.forEach(header => {
-    const option = document.createElement('option');
-    option.value = header;
-    option.textContent = header;
-    filterSelect.appendChild(option);
-  });
-
-  filterSelect.onchange = () => {
-    uniqueIdColumn = filterSelect.value;
-    if (uniqueIdColumn) {
-      createValueFilterDropdown();
-    }
-  };
-}
-
-function createValueFilterDropdown() {
-  const existing = document.getElementById('valueFilter');
-  if (existing) existing.remove();
-
-  const valueFilter = document.createElement('select');
-  valueFilter.id = 'valueFilter';
-  valueFilter.innerHTML = '<option value="">All</option>';
-
-  const uniqueValues = [...new Set(excelData.map(row => row[uniqueIdColumn]))];
-  uniqueValues.forEach(value => {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = value;
-    valueFilter.appendChild(option);
-  });
-
-  document.getElementById('filter').insertAdjacentElement('afterend', valueFilter);
-  valueFilter.onchange = applyFilter;
-}
-
-function applyFilter() {
-  const selectedValue = document.getElementById('valueFilter').value;
-  filteredData = selectedValue ? excelData.filter(row => row[uniqueIdColumn] === selectedValue) : [...excelData];
-  currentIndex = 0;
-  renderPage(); // Replace with your actual row rendering function
-}
 
 
 const toggleBtn = document.getElementById('toggleBtn');
