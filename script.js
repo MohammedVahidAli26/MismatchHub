@@ -198,11 +198,7 @@ updateTogglePosition(); // Call on page load
   } catch (e) {
     console.error("Image rendering error:", e);
     td.textContent = val;
-  }
-}
- catch(e) {
-              td.textContent = val;
-            }
+  
           } else if (/<[a-z][\s\S]*>/i.test(val)) {
             // Render html for short and long desc
             td.innerHTML = val;
