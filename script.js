@@ -4,6 +4,8 @@
   let currentPage = 0;
   let currentImages = [];
   let currentIndex = 0;
+  let filteredData = [];
+
 
   const selectorsIds = [
     'row1_col1','row1_col2',
@@ -70,9 +72,56 @@ updateTogglePosition(); // Call on page load
       updatePageInfo();
       renderPage();
       updateNavButtons();
+      filteredData = [...excelData];
+populateFilterOptions();
+
     };
     reader.readAsArrayBuffer(file);
   }
+
+  function populateFilterOptions() {
+    const columnSelect = document.getElementById('filterColumn');
+    const valueSelect = document.getElementById('filterValue');
+  
+    columnSelect.innerHTML = '<option value="">-- Select Column --</option>';
+    headers.forEach((header, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = header;
+      columnSelect.appendChild(option);
+    });
+  
+    columnSelect.addEventListener('change', () => {
+      const colIndex = parseInt(columnSelect.value);
+      if (isNaN(colIndex)) return;
+  
+      const uniqueValues = [...new Set(excelData.map(row => row[colIndex]))];
+      valueSelect.innerHTML = '<option value="">-- Select Value --</option>';
+      uniqueValues.forEach(val => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        valueSelect.appendChild(option);
+      });
+    });
+  
+    valueSelect.addEventListener('change', () => {
+      const colIndex = parseInt(columnSelect.value);
+      const selectedValue = valueSelect.value;
+  
+      if (!isNaN(colIndex) && selectedValue !== '') {
+        filteredData = excelData.filter(row => row[colIndex] == selectedValue);
+      } else {
+        filteredData = [...excelData];
+      }
+  
+      currentPage = 0;
+      updatePageInfo();
+      renderPage();
+      updateNavButtons();
+    });
+  }
+  
 
   function populateSelectors() {
     selectorsIds.forEach(id => {
@@ -98,7 +147,7 @@ updateTogglePosition(); // Call on page load
 
   function getSelectedIndex(selectId) {
     const sel = document.getElementById(selectId);
-    return sel.value === '' ? null : parseInt(sel.value, 10);
+    return sel.value === '' ? null : parseInt(sel.value, 10); 
   }
 
   function renderPage() {
@@ -106,22 +155,27 @@ updateTogglePosition(); // Call on page load
     mainContainer.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
-    if (!excelData.length) {
+    if (!filteredData.length) {
+
       fragment.appendChild(document.createTextNode('No data loaded'));
       mainContainer.appendChild(fragment);
       return;
     }
 
     if (currentPage < 0) currentPage = 0;
-    if (currentPage >= excelData.length) currentPage = excelData.length - 1;
+    if (currentPage >= filteredData.length) {
+      currentPage = filteredData.length > 0 ? filteredData.length - 1 : 0;
+    }
+    
 
-    const row = excelData[currentPage];
+    const row = filteredData[currentPage];
+const originalIndex = excelData.indexOf(row);
     const wrapper = document.createElement('div');
     wrapper.className = 'table-block';
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-    title.textContent = `Excel Row #${currentPage + 2}`;
+    title.textContent = `Excel Row #${originalIndex + 2} (${currentPage + 1} / ${filteredData.length})`;
     wrapper.appendChild(title);
 
     // Define the groups for rows (only 5 groups, matching your selectors)
@@ -398,8 +452,7 @@ html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullTex
       nextBtn.disabled = true;
       return;
     }
-    pageInfo.textContent = `Row ${currentPage + 2} / ${excelData.length + 1}`;
-  }
+    pageInfo.textContent = `Page ${currentPage + 1} of ${filteredData.length}`;  }
 
   function updateNavButtons() {
     prevBtn.disabled = currentPage <= 0;
