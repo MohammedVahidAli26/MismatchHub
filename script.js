@@ -178,6 +178,8 @@ if (val.trim().startsWith('[')) {
                 if (i === 3) {
                   // Main images side by side
                   const container = document.createElement('div');
+                                    grid.className = 'image-grid';
+
                   container.style.display = 'flex';
                   container.style.justifyContent = 'space-between';
                   container.style.gap = '10px';
