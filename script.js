@@ -157,23 +157,25 @@ updateTogglePosition(); // Call on page load
          if (i === 3 || i === 4) {
   // Rows 4 and 5 are images (main and secondary)
   try {
-    let urls = [];
-    const trimmedVal = val.trim();
+  
+let urls = [];
+const trimmedVal = val.trim();
 
-    if (trimmedVal.startsWith('[')) {
-      // Replace single quotes and ensure proper JSON format
-      const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-        const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
-        return `[${items.join(',')}]`;
-      });
-      urls = JSON.parse(fixedVal);
-    } else if (trimmedVal.includes(',')) {
-      // Handle comma-separated URLs
-      urls = trimmedVal.split(',').map(url => url.trim());
-    } else if (trimmedVal) {
-      // Single URL
-      urls = [trimmedVal];
-    }
+if (trimmedVal.startsWith('[')) {
+  // JSON-style array
+  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+    const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
+    return `[${items.join(',')}]`;
+  });
+  urls = JSON.parse(fixedVal);
+} else if (trimmedVal.includes(',')) {
+  // Comma-separated URLs
+  urls = trimmedVal.split(',').map(url => url.trim());
+} else if (trimmedVal) {
+  // Single URL
+  urls = [trimmedVal];
+}
+
 
     if (urls.length) {
       const grid = document.createElement('div');
