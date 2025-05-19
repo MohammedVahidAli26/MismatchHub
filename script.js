@@ -154,51 +154,65 @@ updateTogglePosition(); // Call on page load
           th.textContent = headers[idx];
           let val = row[idx] ?? '';
 
-         if (i === 3 || i === 4) {
-  // Rows 4 and 5 are images (main and secondary)
-  try {
-    let urls = [];
-    const trimmedVal = val.trim();
+          if (i === 3 || i === 4) {
+            // Rows 4 and 5 are images (main and secondary)
+            try {
+              // Handle val as JSON array string or normal URL string
+              let urls = [];
+             
+if (val.trim().startsWith('[')) {
+    // Replace single quotes and ensure proper JSON format
+    const fixedVal = val.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+      const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
+      return `[${items.join(',')}]`;
+    });
+    urls = JSON.parse(fixedVal);
+  } else if (val.trim()) {
+    urls = [val.trim()];
 
-    if (trimmedVal.startsWith('[')) {
-      // Replace single quotes and ensure proper JSON format
-      const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-        const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
-        return `[${items.join(',')}]`;
-      });
-      urls = JSON.parse(fixedVal);
-    } else if (trimmedVal.includes(',')) {
-      // Handle comma-separated URLs
-      urls = trimmedVal.split(',').map(url => url.trim());
-    } else if (trimmedVal) {
-      // Single URL
-      urls = [trimmedVal];
-    }
+}
 
-    if (urls.length) {
-      const grid = document.createElement('div');
-      grid.className = 'image-grid';
+              if (urls.length) {
+                // For Row 4 (main images) show first selector left, second right (side by side)
+                // For Row 5 (secondary images) show grid for each selector side by side
+                if (i === 3) {
+                  // Main images side by side
+                  const container = document.createElement('div');
+                  container.style.display = 'flex';
+                  container.style.justifyContent = 'space-between';
+                  container.style.gap = '10px';
 
-      urls.forEach((url, imageIndex) => {
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = `${i === 3 ? 'Main' : 'Secondary'} Image ${imageIndex + 1}`;
-        img.addEventListener('click', () => openModal(urls, imageIndex));
-        img.onerror = () => {
-          img.alt = 'Image failed to load';
-          img.style.opacity = '0.5';
-        };
-        grid.appendChild(img);
-      });
-
-      td.appendChild(grid);
-    } else {
-      td.textContent = val;
-    }
-  } catch (e) {
-    console.error("Image rendering error:", e);
-    td.textContent = val;
-  
+                  urls.forEach((url, index) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.width = '350px';
+                    img.style.height = '350px';
+                    img.style.objectFit = 'contain';
+                    img.style.cursor = 'pointer';
+                    img.alt = `Main Image ${index + 1}`;
+                    img.addEventListener('click', () => openModal(urls, index));
+                    container.appendChild(img);
+                  });
+                  td.appendChild(container);
+                } else {
+                  // Secondary images: show grid
+                  const grid = document.createElement('div');
+                  grid.className = 'image-grid';
+                  urls.forEach((url, imageIndex) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = `Secondary Image ${imageIndex + 1}`;
+                    img.addEventListener('click', () => openModal(urls, imageIndex));
+                    grid.appendChild(img);
+                  });
+                  td.appendChild(grid);
+                }
+              } else {
+                td.textContent = val;
+              }
+            } catch(e) {
+              td.textContent = val;
+            }
           } else if (/<[a-z][\s\S]*>/i.test(val)) {
             // Render html for short and long desc
             td.innerHTML = val;
@@ -426,4 +440,3 @@ jumpBtn.addEventListener('click', () => {
     alert(`Row number must be between 2 and ${excelData.length + 1}`);
   }
 });
-
