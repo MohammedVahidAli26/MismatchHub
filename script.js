@@ -159,13 +159,17 @@ updateTogglePosition(); // Call on page load
             try {
               // Handle val as JSON array string or normal URL string
               let urls = [];
-             
-if (val.trim().startsWith('[')) {
-    // Replace single quotes and ensure proper JSON format
-    const fixedVal = val.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-      const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
-      return `[${items.join(',')}]`;
+          
+const trimmedVal = val.trim();
+
+if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+  // Handle bracketed list (with or without quotes)
+  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+    const items = inner.split(',').map(s => {
+      const trimmed = s.trim();
+      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
     });
+
     urls = JSON.parse(fixedVal);
   } else if (val.trim()) {
     urls = [val.trim()];
