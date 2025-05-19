@@ -170,11 +170,17 @@ if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
       return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
     });
 
-    urls = JSON.parse(fixedVal);
-  } else if (val.trim()) {
-    urls = [val.trim()];
-
+    return `[${items.join(',')}]`;
+  });
+  urls = JSON.parse(fixedVal);
+} else if (trimmedVal.includes(',')) {
+  // Handle plain comma-separated URLs (no brackets)
+  urls = trimmedVal.split(',').map(url => url.trim());
+} else if (trimmedVal) {
+  // Single URL
+  urls = [trimmedVal];
 }
+
 
               if (urls.length) {
                 // For Row 4 (main images) show first selector left, second right (side by side)
