@@ -154,75 +154,75 @@ updateTogglePosition(); // Call on page load
           th.textContent = headers[idx];
           let val = row[idx] ?? '';
 
-       if (i === 3 || i === 4) {
-  // Rows 4 and 5 are images (main and secondary)
-  try {
-    let urls = [];
-    const trimmedVal = val.trim();
+          if (i === 3 || i === 4) {
+            // Rows 4 and 5 are images (main and secondary)
+            try {
+              // Handle val as JSON array string or normal URL string
+              let urls = [];
+          
+const trimmedVal = val.trim();
 
-    if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-      // Handle bracketed list (with or without quotes)
-      const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-        const items = inner.split(',').map(s => {
-          const trimmed = s.trim();
-          return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
-        });
-        return `[${items.join(',')}]`;
-      });
-      urls = JSON.parse(fixedVal);
-    } else if (trimmedVal.includes(',')) {
-      // Handle plain comma-separated URLs (no brackets)
-      urls = trimmedVal.split(',').map(url => url.trim());
-    } else if (trimmedVal) {
-      // Single URL
-      urls = [trimmedVal];
-    }
+if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+  // Handle bracketed list (with or without quotes)
+  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+    const items = inner.split(',').map(s => {
+      const trimmed = s.trim();
+      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
+    });
 
-    if (urls.length) {
-      if (i === 3) {
-        // Main images side by side
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
-        container.style.gap = '10px';
-
-        urls.forEach((url, index) => {
-          const img = document.createElement('img');
-          img.src = url;
-          img.style.width = '350px';
-          img.style.height = '350px';
-          img.style.objectFit = 'contain';
-          img.style.cursor = 'pointer';
-          img.alt = `Main Image ${index + 1}`;
-          img.addEventListener('click', () => openModal(urls, index));
-          container.appendChild(img);
-        });
-
-        td.appendChild(container);
-      } else {
-        // Secondary images: show grid
-        const grid = document.createElement('div');
-        grid.className = 'image-grid';
-
-        urls.forEach((url, imageIndex) => {
-          const img = document.createElement('img');
-          img.src = url;
-          img.alt = `Secondary Image ${imageIndex + 1}`;
-          img.addEventListener('click', () => openModal(urls, imageIndex));
-          grid.appendChild(img);
-        });
-
-        td.appendChild(grid);
-      }
-    } else {
-      td.textContent = val;
-    }
-  } catch (e) {
-    console.error("Error rendering images:", e);
-    td.textContent = val;
-  }
+    return `[${items.join(',')}]`;
+  });
+  urls = JSON.parse(fixedVal);
+} else if (trimmedVal.includes(',')) {
+  // Handle plain comma-separated URLs (no brackets)
+  urls = trimmedVal.split(',').map(url => url.trim());
+} else if (trimmedVal) {
+  // Single URL
+  urls = [trimmedVal];
 }
 
+
+              if (urls.length) {
+                // For Row 4 (main images) show first selector left, second right (side by side)
+                // For Row 5 (secondary images) show grid for each selector side by side
+                if (i === 3) {
+                  // Main images side by side
+                  const container = document.createElement('div');
+                  container.style.display = 'flex';
+                  container.style.justifyContent = 'space-between';
+                  container.style.gap = '10px';
+
+                  urls.forEach((url, index) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.width = '350px';
+                    img.style.height = '350px';
+                    img.style.objectFit = 'contain';
+                    img.style.cursor = 'pointer';
+                    img.alt = `Main Image ${index + 1}`;
+                    img.addEventListener('click', () => openModal(urls, index));
+                    container.appendChild(img);
+                  });
+                  td.appendChild(container);
+                } else {
+                  // Secondary images: show grid
+                  const grid = document.createElement('div');
+                  grid.className = 'image-grid';
+                  urls.forEach((url, imageIndex) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = `Secondary Image ${imageIndex + 1}`;
+                    img.addEventListener('click', () => openModal(urls, imageIndex));
+                    grid.appendChild(img);
+                  });
+                  td.appendChild(grid);
+                }
+              } else {
+                td.textContent = val;
+              }
+            } catch(e) {
+              td.textContent = val;
+            }
           } else if (/<[a-z][\s\S]*>/i.test(val)) {
             // Render html for short and long desc
             td.innerHTML = val;
