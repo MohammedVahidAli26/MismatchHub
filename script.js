@@ -4,6 +4,117 @@
   let currentPage = 0;
   let currentImages = [];
   let currentIndex = 0;
+let filteredData = [];
+let uniqueIdColumn = '';
+
+document.getElementById('fileInput').addEventListener('change', handleFile);
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    excelData = XLSX.utils.sheet_to_json(worksheet);
+
+    if (excelData.length > 0) {
+      populateUniqueIdSelector(Object.keys(excelData[0]));
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function populateUniqueIdSelector(columns) {
+  const selector = document.getElementById('filter');
+  selector.innerHTML = '<option value="">-- Select Unique ID Column --</option>';
+  columns.forEach(col => {
+    const option = document.createElement('option');
+    option.value = col;
+    option.textContent = col;
+    selector.appendChild(option);
+  });
+
+  selector.onchange = function () {
+    uniqueIdColumn = this.value;
+    if (uniqueIdColumn) {
+      populateFilterValues();
+    }
+  };
+}
+
+function populateFilterValues() {
+  const filterSelect = document.createElement('select');
+  filterSelect.id = 'valueFilter';
+  filterSelect.innerHTML = '<option value="">All</option>';
+
+  const uniqueValues = [...new Set(excelData.map(row => row[uniqueIdColumn]))];
+  uniqueValues.forEach(val => {
+    const option = document.createElement('option');
+    option.value = val;
+    option.textContent = val;
+    filterSelect.appendChild(option);
+  });
+
+  const existing = document.getElementById('valueFilter');
+  if (existing) existing.remove();
+
+  document.getElementById('filter').insertAdjacentElement('afterend', filterSelect);
+
+  filterSelect.onchange = applyFilter;
+}
+
+function applyFilter() {
+  const selectedValue = document.getElementById('valueFilter').value;
+  filteredData = selectedValue ? excelData.filter(row => row[uniqueIdColumn] === selectedValue) : [...excelData];
+  currentIndex = 0;
+  displayRow(currentIndex);
+}
+
+function displayRow(index) {
+  const container = document.getElementById('mainContainer');
+  const data = filteredData.length ? filteredData : excelData;
+
+  if (!data.length) {
+    container.innerHTML = '<p>No data available.</p>';
+    return;
+  }
+
+  const row = data[index];
+  container.innerHTML = `<pre>${JSON.stringify(row, null, 2)}</pre>`;
+
+  document.getElementById('prevBtn').disabled = index === 0;
+  document.getElementById('nextBtn').disabled = index >= data.length - 1;
+  document.getElementById('pageInfo').textContent = `Row ${index + 1} / ${data.length}`;
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentIndex > 0) {
+    currentIndex--;
+    displayRow(currentIndex);
+  }
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  const data = filteredData.length ? filteredData : excelData;
+  if (currentIndex < data.length - 1) {
+    currentIndex++;
+    displayRow(currentIndex);
+  }
+});
+
+document.getElementById('jumpBtn').addEventListener('click', () => {
+  const rowNumber = parseInt(document.getElementById('jumpInput').value, 10);
+  const data = filteredData.length ? filteredData : excelData;
+  if (rowNumber >= 1 && rowNumber <= data.length) {
+    currentIndex = rowNumber - 1;
+    displayRow(currentIndex);
+  }
+});
+
 
   const selectorsIds = [
     'filter'
