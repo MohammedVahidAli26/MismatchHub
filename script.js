@@ -203,7 +203,6 @@ if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
     console.error("Image rendering error:", e);
     td.textContent = val;
   }
-}
 
  catch(e) {
               td.textContent = val;
