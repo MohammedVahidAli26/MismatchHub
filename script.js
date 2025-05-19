@@ -154,26 +154,28 @@ updateTogglePosition(); // Call on page load
           th.textContent = headers[idx];
           let val = row[idx] ?? '';
 
-         if (i === 3 || i === 4) {
+        if (i === 3 || i === 4) {
   // Rows 4 and 5 are images (main and secondary)
   try {
-  
-let urls = [];
+   let urls = [];
 const trimmedVal = val.trim();
 
-if (trimmedVal.startsWith('[')) {
-  // JSON-style array
-  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-    const items = inner.split(',').map(s => `"${s.trim().replace(/^"|"$/g, '')}"`);
-    return `[${items.join(',')}]`;
-  });
-  urls = JSON.parse(fixedVal);
+if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+  // Handle bracketed list (with or without quotes)
+  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+    const items = inner.split(',').map(s => {
+      const trimmed = s.trim();
+      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
+    });
+    return `[${items.join(',')}]`;
+  });
+  urls = JSON.parse(fixedVal);
 } else if (trimmedVal.includes(',')) {
-  // Comma-separated URLs
-  urls = trimmedVal.split(',').map(url => url.trim());
+  // Handle plain comma-separated URLs (no brackets)
+  urls = trimmedVal.split(',').map(url => url.trim());
 } else if (trimmedVal) {
-  // Single URL
-  urls = [trimmedVal];
+  // Single URL
+  urls = [trimmedVal];
 }
 
 
@@ -202,6 +204,7 @@ if (trimmedVal.startsWith('[')) {
     td.textContent = val;
   }
 }
+
  catch(e) {
               td.textContent = val;
             }
