@@ -1,4 +1,5 @@
 
+
   let excelData = [];
   let headers = [];
   let currentPage = 0;
@@ -6,6 +7,7 @@
   let currentIndex = 0;
 
   const selectorsIds = [
+    'filter'
     'row1_col1','row1_col2',
     'row2_col1','row2_col2',
     'row3_col1','row3_col2',
@@ -20,8 +22,6 @@
       timer = setTimeout(() => fn(...args), delay);
     };
   };
-
-
 
 const toggleBtn = document.getElementById('toggleBtn');
 const sidebar = document.getElementById('sidebar');
@@ -165,22 +165,22 @@ updateTogglePosition(); // Call on page load
 const trimmedVal = val.trim();
 
 if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-  // Handle bracketed list (with or without quotes)
-  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-    const items = inner.split(',').map(s => {
-      const trimmed = s.trim();
-      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
-    });
+  // Handle bracketed list (with or without quotes)
+  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+    const items = inner.split(',').map(s => {
+      const trimmed = s.trim();
+      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
+    });
 
-    return `[${items.join(',')}]`;
-  });
-  urls = JSON.parse(fixedVal);
+    return `[${items.join(',')}]`;
+  });
+  urls = JSON.parse(fixedVal);
 } else if (trimmedVal.includes(',')) {
-  // Handle plain comma-separated URLs (no brackets)
-  urls = trimmedVal.split(',').map(url => url.trim());
+  // Handle plain comma-separated URLs (no brackets)
+  urls = trimmedVal.split(',').map(url => url.trim());
 } else if (trimmedVal) {
-  // Single URL
-  urls = [trimmedVal];
+  // Single URL
+  urls = [trimmedVal];
 }
 
 
