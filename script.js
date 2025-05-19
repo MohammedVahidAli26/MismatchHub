@@ -5,8 +5,6 @@
   let currentImages = [];
   let currentIndex = 0;
 
-
-
   const selectorsIds = [
     'filter'
     'row1_col1','row1_col2',
