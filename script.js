@@ -177,26 +177,17 @@ if (val.trim().startsWith('[')) {
                 // For Row 5 (secondary images) show grid for each selector side by side
                 if (i === 3) {
                   // Main images side by side
-                  const container = document.createElement('div');
-
-                  container.style.display = 'flex';
-                  container.style.justifyContent = 'space-between';
-                  container.style.gap = '10px';
-                  const grid = document.createElement('div');
+                    const grid = document.createElement('div');
                   grid.className = 'image-grid';
-                  urls.forEach((url, index) => {
+                  urls.forEach((url, imageIndex) => {
                     const img = document.createElement('img');
                     img.src = url;
-                    img.style.width = '350px';
-                    img.style.height = '350px';
-                    img.style.objectFit = 'contain';
-                    img.style.cursor = 'pointer';
-                    img.alt = `Main Image ${index + 1}`;
-                    img.addEventListener('click', () => openModal(urls, index));
-                    container.appendChild(img);
+                    img.alt = `Main Image ${imageIndex + 1}`;
+                    img.addEventListener('click', () => openModal(urls, imageIndex));
+                    grid.appendChild(img);
                   });
-                  td.appendChild(container);
-                } else {
+                  td.appendChild(grid);
+                }else {
                   // Secondary images: show grid
                   const grid = document.createElement('div');
                   grid.className = 'image-grid';
