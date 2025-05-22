@@ -1,28 +1,29 @@
+let excelData = [];
+let headers = [];
+let currentPage = 0;
+let currentImages = [];
+let currentIndex = 0;
+let filteredData = [];
+let selectedFilterInfo = '';
+let isScrollView = false; // Add this if missing
 
-  let excelData = [];
-  let headers = [];
-  let currentPage = 0;
-  let currentImages = [];
-  let currentIndex = 0;
-  let filteredData = [];
+const selectorsIds = [
+  'row1_col1','row1_col2',
+  'row2_col1','row2_col2',
+  'row3_col1','row3_col2',
+  'row4_col1','row4_col2',
+  'row5_col1','row5_col2'
+];
 
-
-  const selectorsIds = [
-    'row1_col1','row1_col2',
-    'row2_col1','row2_col2',
-    'row3_col1','row3_col2',
-    'row4_col1','row4_col2',
-    'row5_col1','row5_col2'
-  ];
-
-  const debounce = (fn, delay) => {
-    let timer = null;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), delay);
-    };
+const debounce = (fn, delay) => {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
   };
+};
 
+// Sidebar toggle logic
 const toggleBtn = document.getElementById('toggleBtn');
 const sidebar = document.getElementById('sidebar');
 
@@ -47,150 +48,278 @@ toggleBtn.addEventListener('click', () => {
   updateTogglePosition();
 });
 
-updateTogglePosition(); // Call on page load
+updateTogglePosition();
 
+document.getElementById('fileInput').addEventListener('change', handleFile);
 
-  document.getElementById('fileInput').addEventListener('change', handleFile);
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-  function handleFile(event) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    headers = json[0];
+    excelData = json.slice(1);
     
+    console.log("File loaded. Headers:", headers);
+    console.log("Excel data:", excelData);
 
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-       function handleFile(event) {
-                      filteredData = [...excelData];
-
-
-
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-      headers = json[0];
-      excelData = json.slice(1);
-
-      populateSelectors();
-      currentPage = 0;
-      updatePageInfo();
-      renderPage();
-      updateNavButtons();
-populateFilterOptions();
-
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-      headers = json[0];
-      excelData = json.slice(1);
-
-      populateSelectors();
-      currentPage = 0;
-      updatePageInfo();
-      renderPage();
-      updateNavButtons();
-populateFilterOptions();
-
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  function populateFilterOptions() {
-    const columnSelect = document.getElementById('filterColumn');
-    const valueSelect = document.getElementById('filterValue');
-  
-    columnSelect.innerHTML = '<option value="">-- Select Column --</option>';
-    headers.forEach((header, index) => {
-      const option = document.createElement('option');
-      option.value = index;
-      option.textContent = header;
-      columnSelect.appendChild(option);
-    });
-  
-    columnSelect.addEventListener('change', () => {
-      const colIndex = parseInt(columnSelect.value);
-      if (isNaN(colIndex)) return;
-  
-      const uniqueValues = [...new Set(excelData.map(row => row[colIndex]))];
-      valueSelect.innerHTML = '<option value="">-- Select Value --</option>';
-      uniqueValues.forEach(val => {
-        const option = document.createElement('option');
-        option.value = val;
-        option.textContent = val;
-        valueSelect.appendChild(option);
-      });
-    });
-  
- valueSelect.addEventListener('change', () => {
-  const colIndex = parseInt(columnSelect.value);
-  const selectedValue = valueSelect.value;
-if (!isNaN(colIndex) && selectedValue !== '') {
-  filteredData = excelData.filter(row => row[colIndex] == selectedValue);
-  selectedFilterInfo = ` — ${headers[colIndex]} = ${selectedValue}`;
-} else {
-  filteredData = [...excelData];
-  selectedFilterInfo = '';
+    populateSelectors();
+    populateFilterOptions();
+    
+    // ✅ KEY FIX: Apply data processing after everything is set up
+    applyDataProcessing();
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-
+// ✅ FIXED: Centralized data processing function
+function applyDataProcessing() {
+  // Start with all data
+  let processedData = [...excelData];
+  
+  // Apply filter if selected (this is the main filtering)
+  const columnSelect = document.getElementById('filterColumn');
+  const valueSelect = document.getElementById('filterValue');
+  const colIndex = parseInt(columnSelect.value);
+  const selectedValue = valueSelect.value;
+  
+  if (!isNaN(colIndex) && selectedValue !== '') {
+    processedData = processedData.filter(row => row[colIndex] == selectedValue);
+    selectedFilterInfo = ` — ${headers[colIndex]} = ${selectedValue}`;
+  } else {
+    selectedFilterInfo = '';
+  }
+  
+  // ✅ Don't filter by row selections - just store the filtered data
+  // Row selections are for display/grouping purposes, not data filtering
+  filteredData = processedData;
+  
+  // Reset pagination and render
   currentPage = 0;
   updatePageInfo();
-
+  
   if (isScrollView) {
     renderAllRows();
   } else {
     renderPage();
     updateNavButtons();
   }
-});
+}
 
-
+// ✅ Helper functions for row selection tracking (don't filter data)
+function getSelectedRowsInfo() {
+  const selectedRows = [];
+  
+  // Group selectors by rows (row1, row2, etc.)
+  for (let i = 1; i <= 5; i++) {
+    const col1Index = getSelectedIndex(`row${i}_col1`);
+    const col2Index = getSelectedIndex(`row${i}_col2`);
+    
+    // If at least one column is selected for this row
+    if (col1Index !== null || col2Index !== null) {
+      selectedRows.push({
+        rowNumber: i,
+        col1: col1Index !== null ? headers[col1Index] : null,
+        col2: col2Index !== null ? headers[col2Index] : null,
+        col1Index: col1Index,
+        col2Index: col2Index
+      });
+    }
   }
   
+  return selectedRows;
+}
 
-  function populateSelectors() {
-    selectorsIds.forEach(id => {
-      const sel = document.getElementById(id);
-      sel.innerHTML = '<option value="">-- No selection --</option>';
-      headers.forEach((header, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = header;
-        sel.appendChild(option);
-      });
-      sel.removeEventListener('change', debouncedRender);
-      sel.addEventListener('change', debouncedRender);
-    });
+// ✅ Get the actual values for selected columns from current filtered data
+function getSelectedRowValues(rowIndex) {
+  const selectedInfo = getSelectedRowsInfo();
+  const result = {};
+  
+  selectedInfo.forEach(selection => {
+    if (selection.col1Index !== null) {
+      result[`row${selection.rowNumber}_col1`] = filteredData[rowIndex]?.[selection.col1Index];
+    }
+    if (selection.col2Index !== null) {
+      result[`row${selection.rowNumber}_col2`] = filteredData[rowIndex]?.[selection.col2Index];
+    }
+  });
+  
+  return result;
+}
+
+function populateFilterOptions() {
+  const columnSelect = document.getElementById('filterColumn');
+  const valueSelect = document.getElementById('filterValue');
+
+  columnSelect.innerHTML = '<option value="">-- Select Column (Optional) --</option>';
+  headers.forEach((header, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = header;
+    columnSelect.appendChild(option);
+  });
+
+  columnSelect.addEventListener('change', () => {
+    const colIndex = parseInt(columnSelect.value);
+    
+    if (!isNaN(colIndex)) {
+      // ✅ Just populate the existing select with search functionality
+      populateValueSelectWithSearch(colIndex);
+    } else {
+      // Reset value select
+      valueSelect.innerHTML = '<option value="">-- Select Column First --</option>';
+    }
+    
+    applyDataProcessing();
+  });
+
+  // ✅ Keep original value select change listener
+  valueSelect.addEventListener('change', () => {
+    applyDataProcessing();
+  });
+}
+
+// ✅ NEW: Add search functionality to existing value select
+function populateValueSelectWithSearch(colIndex) {
+  const valueSelect = document.getElementById('filterValue');
+  const uniqueValues = [...new Set(excelData.map(row => row[colIndex]))].filter(val => val !== undefined && val !== '');
+  
+  // Sort values
+  const sortedValues = uniqueValues.sort((a, b) => {
+    const numA = parseFloat(a);
+    const numB = parseFloat(b);
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return numA - numB;
+    }
+    return a.toString().localeCompare(b.toString());
+  });
+
+  // Populate select with all values
+  valueSelect.innerHTML = '<option value="">-- Select Value (Optional) --</option>';
+  sortedValues.forEach(val => {
+    const option = document.createElement('option');
+    option.value = val;
+    option.textContent = val;
+    valueSelect.appendChild(option);
+  });
+
+  // ✅ Add search input right above the select (without replacing anything)
+  let searchInput = document.getElementById('valueSearchInput');
+  
+  if (!searchInput) {
+    searchInput = document.createElement('input');
+    searchInput.id = 'valueSearchInput';
+    searchInput.type = 'text';
+    searchInput.placeholder = '🔍 Type to search values...';
+    searchInput.style.cssText = 'width: 100%; padding: 6px; margin-bottom: 3px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;';
+    
+    // Insert search input before the value select
+    valueSelect.parentNode.insertBefore(searchInput, valueSelect);
   }
+  
+  // Clear search when column changes
+  searchInput.value = '';
+  
+  // ✅ Add search functionality that filters the select options
+  searchInput.oninput = debounce(() => {
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    // Clear current options
+    valueSelect.innerHTML = '<option value="">-- Select Value (Optional) --</option>';
+    
+    // Filter and add matching options
+    const filteredValues = searchTerm === '' ? sortedValues : 
+      sortedValues.filter(val => val.toString().toLowerCase().includes(searchTerm));
+    
+    filteredValues.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = val;
+      valueSelect.appendChild(option);
+    });
+    
+    // Update count
+    const countText = filteredValues.length > 0 ? ` (${filteredValues.length} found)` : ' (no matches)';
+    valueSelect.firstElementChild.textContent = `-- Select Value (Optional) --${countText}`;
+    
+  }, 200);
+}
 
-  const debouncedRender = debounce(() => {
-    currentPage = 0;
-    updatePageInfo();
+// ✅ FIXED: Back to original applyDataProcessing
+function applyDataProcessing() {
+  let processedData = [...excelData];
+  
+  const columnSelect = document.getElementById('filterColumn');
+  const valueSelect = document.getElementById('filterValue');
+  const colIndex = parseInt(columnSelect.value);
+  const selectedValue = valueSelect.value;
+  
+  if (!isNaN(colIndex) && selectedValue !== '') {
+    processedData = processedData.filter(row => row[colIndex] == selectedValue);
+    selectedFilterInfo = ` — ${headers[colIndex]} = ${selectedValue}`;
+  } else {
+    selectedFilterInfo = '';
+  }
+  
+  filteredData = processedData;
+  
+  currentPage = 0;
+  updatePageInfo();
+  
+  if (isScrollView) {
+    renderAllRows();
+  } else {
     renderPage();
     updateNavButtons();
-  }, 250);
-
-  function getSelectedIndex(selectId) {
-    const sel = document.getElementById(selectId);
-    return sel.value === '' ? null : parseInt(sel.value, 10); 
   }
+}
 
+
+
+// ✅ FIXED: Reset value select without breaking layout
+function resetValueSelect() {
+  const valueSelect = document.getElementById('filterValue');
+  const searchInput = document.getElementById('valueSearch');
+  
+  // Remove search input if it exists
+  if (searchInput) {
+    searchInput.remove();
+  }
+  
+  // Reset select options
+  valueSelect.innerHTML = '<option value="">-- Select Column First --</option>';
+}
+
+function populateSelectors() {
+  selectorsIds.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">-- No selection --</option>';
+    headers.forEach((header, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = header;
+      sel.appendChild(option);
+    });
+    sel.removeEventListener('change', debouncedRender);
+    sel.addEventListener('change', debouncedRender);
+  });
+}
+
+// ✅ Updated debounced render to use centralized processing
+const debouncedRender = debounce(() => {
+  applyDataProcessing();
+}, 250);
+
+function getSelectedIndex(selectId) {
+  const sel = document.getElementById(selectId);
+  return sel.value === '' ? null : parseInt(sel.value, 10); 
+}
 
 function renderPage() {
   const mainContainer = document.getElementById('mainContainer');
@@ -275,11 +404,48 @@ if (i === 3 || i === 4) {
     }).filter(Boolean);
 
     // Convert to HTTPS-safe URLs
-    const getSafeImageUrl = (url) => {
-      if (url.startsWith('https://')) return url;
-      const cleanUrl = url.replace(/^http:\/\//i, '');
-      return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
-    };
+  const getSafeImageUrl = (url) => {
+  try {
+    // If already HTTPS, return as-is
+    if (url.startsWith('https://')) return url;
+    
+    // For HTTP URLs, convert to HTTPS directly first
+    if (url.startsWith('http://')) {
+      const httpsUrl = url.replace(/^http:\/\//i, 'https://');
+      return httpsUrl;
+    }
+    
+    // If no protocol, assume HTTPS
+    if (!url.startsWith('http')) {
+      return `https://${url}`;
+    }
+    
+    return url;
+  } catch (e) {
+    console.warn('URL processing failed:', url, e);
+    return url;
+  }
+};const getSafeImageUrlWithProxy = (url) => {
+  try {
+    // If already HTTPS, return as-is
+    if (url.startsWith('https://')) return url;
+    
+    // For HTTP URLs, try direct HTTPS first
+    if (url.startsWith('http://')) {
+      return url.replace(/^http:\/\//i, 'https://');
+    }
+    
+    // If no protocol, assume HTTPS
+    return url.startsWith('http') ? url : `https://${url}`;
+    
+  } catch (e) {
+    // Fallback to proxy only if needed
+    console.warn('Direct HTTPS failed, using proxy:', url);
+    const cleanUrl = url.replace(/^https?:\/\//i, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+  }
+};
+
 
     td.textContent = ''; // Clear cell
 
@@ -479,47 +645,65 @@ html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullTex
   });
 
   // Navigation buttons & pagination
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const pageInfo = document.getElementById('pageInfo');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pageInfo = document.getElementById('pageInfo');
 
-  prevBtn.onclick = () => {
-    if (currentPage > 0) {
-      currentPage--;
-      smoothScrollToTop();
-      updatePageInfo();
-      renderPage();
-      updateNavButtons();
-    }
-  };
-  nextBtn.onclick = () => {
-    if (currentPage < excelData.length - 1) {
-      currentPage++;
-      smoothScrollToTop();
-      updatePageInfo();
-      renderPage();
-      updateNavButtons();
-    }
-  };
-
-  function updatePageInfo() {
-    if (!excelData.length) {
-      pageInfo.textContent = 'No data loaded';
-      prevBtn.disabled = true;
-      nextBtn.disabled = true;
-      return;
-    }
-    pageInfo.textContent = `Page ${currentPage + 1} of ${filteredData.length}`;  }
-
-  function updateNavButtons() {
-    prevBtn.disabled = currentPage <= 0;
-    nextBtn.disabled = currentPage >= excelData.length - 1;
+prevBtn.onclick = () => {
+  if (currentPage > 0) {
+    currentPage--;
+    smoothScrollToTop();
+    updatePageInfo();
+    renderPage();
+    updateNavButtons();
   }
+};
 
-  function smoothScrollToTop() {
-    const content = document.getElementById('content');
+nextBtn.onclick = () => {
+  if (currentPage < filteredData.length - 1) {
+    currentPage++;
+    smoothScrollToTop();
+    updatePageInfo();
+    renderPage();
+    updateNavButtons();
+  }
+};
+
+function updatePageInfo() {
+  if (!excelData.length) {
+    pageInfo.textContent = 'No data loaded';
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+  pageInfo.textContent = `Page ${currentPage + 1} of ${filteredData.length}`;
+}
+
+function updateNavButtons() {
+  prevBtn.disabled = currentPage <= 0;
+  nextBtn.disabled = currentPage >= filteredData.length - 1;
+}
+
+function smoothScrollToTop() {
+  // Try multiple possible containers
+  const mainContainer = document.getElementById('mainContainer');
+  const content = document.getElementById('content');
+  const body = document.body;
+  const html = document.documentElement;
+  
+  // Scroll main container if it exists and is visible
+  if (mainContainer && mainContainer.style.display !== 'none') {
+    mainContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  
+  // Also scroll the page to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Scroll content container if it exists and is visible
+  if (content && content.style.display !== 'none') {
     content.scrollTo({ top: 0, behavior: 'smooth' });
   }
+}
 
 
   function bindImageClickEvents() {
@@ -562,47 +746,89 @@ jumpBtn.addEventListener('click', () => {
 });
 
 
-let isScrollView = false;
 
+// ✅ FIXED: Working switch button functionality
 const toggleViewBtn = document.getElementById('toggleViewBtn');
 
-toggleViewBtn.addEventListener('click', () => {
-  isScrollView = !isScrollView;
+if (toggleViewBtn) {
+  toggleViewBtn.addEventListener('click', () => {
+    isScrollView = !isScrollView;
 
-  const content = document.getElementById('content');
-  const mainContainer = document.getElementById('mainContainer');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const pageInfo = document.getElementById('pageInfo');
+    const content = document.getElementById('content');
+    const mainContainer = document.getElementById('mainContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageInfo = document.getElementById('pageInfo');
 
-  if (isScrollView) {
-    // Switch to scroll view
-    mainContainer.style.display = 'none';
-    content.style.display = 'block';
+    if (isScrollView) {
+      // Switch to scroll view
+      content.style.display = 'block';
+      mainContainer.style.display = 'none';
+      
+      renderAllRows(); 
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      pageInfo.style.display = 'none';
+      toggleViewBtn.textContent = 'Switch to Paginated View';
+    } else {
+      // Switch to paginated view - THIS IS THE KEY FIX
+      mainContainer.style.display = 'block';
+      content.style.display = 'none';
 
-    renderAllRows(); // Make sure this function is defined and working
+      // Reset to first page and render
+      currentPage = 0;
+      renderPage();  // This was missing or not being called properly
+      updatePageInfo();
+      updateNavButtons();
 
-    prevBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
-    pageInfo.style.display = 'none';
-    toggleViewBtn.textContent = 'Switch to Paginated View';
-  } else {
-    // Switch to paginated view
-    content.style.display = 'none';
-    mainContainer.style.display = 'block';
+      prevBtn.style.display = '';
+      nextBtn.style.display = '';
+      pageInfo.style.display = '';
+      toggleViewBtn.textContent = 'Switch to Scroll View';
+    }
+  });
+}
 
-    currentPage = 0;
-    renderPage(); // Make sure this function is defined and working
-    updatePageInfo();
-    updateNavButtons();
+// Alternative if your button has a different ID:
+const scrollToggleBtn = document.getElementById('scrollToggleBtn');
 
-    prevBtn.style.display = '';
-    nextBtn.style.display = '';
-    pageInfo.style.display = '';
-    toggleViewBtn.textContent = 'Switch to Scroll View';
-  }
-});
+if (scrollToggleBtn) {
+  scrollToggleBtn.addEventListener('click', () => {
+    isScrollView = !isScrollView;
+    
+    const content = document.getElementById('content');
+    const mainContainer = document.getElementById('mainContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageInfo = document.getElementById('pageInfo');
 
+    if (isScrollView) {
+      // Switch to scroll view
+      content.style.display = 'block';
+      mainContainer.style.display = 'none';
+      
+      renderAllRows(); 
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      pageInfo.style.display = 'none';
+      scrollToggleBtn.textContent = 'Switch to Paginated View';
+    } else {
+      // Switch to paginated view - KEY FIX
+      mainContainer.style.display = 'block';
+      content.style.display = 'none';
+
+      currentPage = 0;
+      renderPage();  // Essential - this renders the content
+      updatePageInfo();
+      updateNavButtons();
+
+      prevBtn.style.display = '';
+      nextBtn.style.display = '';
+      pageInfo.style.display = '';
+      scrollToggleBtn.textContent = 'Switch to Scroll View';
+    }
+  });
+}
 
 
 function renderAllRows() {
@@ -767,6 +993,8 @@ document.getElementById('scrollToggleBtn').addEventListener('click', () => {
     : 'Switch to Scroll View';
   renderPage(); // Re-render based on new mode
 });
+
+
 function highlightWords() {
   const keywords = {
     kids: /\b(kids?|children|child)\b/gi,
@@ -838,4 +1066,3 @@ html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullTex
 document.getElementById('highlightToggle').addEventListener('change', highlightWords);
 document.getElementById('genderHighlightToggle').addEventListener('change', highlightWords);
 document.getElementById('othersHighlightToggle').addEventListener('change', highlightWords);
-
