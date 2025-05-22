@@ -53,11 +53,24 @@ updateTogglePosition(); // Call on page load
   document.getElementById('fileInput').addEventListener('change', handleFile);
 
   function handleFile(event) {
+    
+
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
+       function handleFile(event) {
+                      filteredData = [...excelData];
+
+
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
 
@@ -72,7 +85,26 @@ updateTogglePosition(); // Call on page load
       updatePageInfo();
       renderPage();
       updateNavButtons();
-      filteredData = [...excelData];
+populateFilterOptions();
+
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      headers = json[0];
+      excelData = json.slice(1);
+
+      populateSelectors();
+      currentPage = 0;
+      updatePageInfo();
+      renderPage();
+      updateNavButtons();
 populateFilterOptions();
 
     };
@@ -105,21 +137,30 @@ populateFilterOptions();
       });
     });
   
-    valueSelect.addEventListener('change', () => {
-      const colIndex = parseInt(columnSelect.value);
-      const selectedValue = valueSelect.value;
-  
-      if (!isNaN(colIndex) && selectedValue !== '') {
-        filteredData = excelData.filter(row => row[colIndex] == selectedValue);
-      } else {
-        filteredData = [...excelData];
-      }
-  
-      currentPage = 0;
-      updatePageInfo();
-      renderPage();
-      updateNavButtons();
-    });
+ valueSelect.addEventListener('change', () => {
+  const colIndex = parseInt(columnSelect.value);
+  const selectedValue = valueSelect.value;
+if (!isNaN(colIndex) && selectedValue !== '') {
+  filteredData = excelData.filter(row => row[colIndex] == selectedValue);
+  selectedFilterInfo = ` — ${headers[colIndex]} = ${selectedValue}`;
+} else {
+  filteredData = [...excelData];
+  selectedFilterInfo = '';
+}
+
+
+  currentPage = 0;
+  updatePageInfo();
+
+  if (isScrollView) {
+    renderAllRows();
+  } else {
+    renderPage();
+    updateNavButtons();
+  }
+});
+
+
   }
   
 
@@ -150,85 +191,78 @@ populateFilterOptions();
     return sel.value === '' ? null : parseInt(sel.value, 10); 
   }
 
-  function renderPage() {
-    const mainContainer = document.getElementById('mainContainer');
-    mainContainer.innerHTML = '';
-    const fragment = document.createDocumentFragment();
 
-    if (!filteredData.length) {
+function renderPage() {
+  const mainContainer = document.getElementById('mainContainer');
+  mainContainer.innerHTML = '';
+  const fragment = document.createDocumentFragment();
 
-      fragment.appendChild(document.createTextNode('No data loaded'));
-      mainContainer.appendChild(fragment);
-      return;
-    }
+  if (!filteredData.length) {
+    fragment.appendChild(document.createTextNode('No data loaded'));
+    mainContainer.appendChild(fragment);
+    return;
+  }
 
-    if (currentPage < 0) currentPage = 0;
-    if (currentPage >= filteredData.length) {
-      currentPage = filteredData.length > 0 ? filteredData.length - 1 : 0;
-    }
-    
+  const pagesToRender = isScrollView ? filteredData : [filteredData[currentPage]];
 
-    const row = filteredData[currentPage];
-const originalIndex = excelData.indexOf(row);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'table-block';
+  pagesToRender.forEach((row, pageIndex) => {
+    const originalIndex = excelData.indexOf(row);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-block';
 
-    const title = document.createElement('div');
-    title.className = 'row-block-title';
-    title.textContent = `Excel Row #${originalIndex + 2} (${currentPage + 1} / ${filteredData.length})`;
-    wrapper.appendChild(title);
+    const title = document.createElement('div');
+    title.className = 'row-block-title';
+title.textContent = `Excel Row #${originalIndex + 2}(${originalIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+    wrapper.appendChild(title);
 
-    // Define the groups for rows (only 5 groups, matching your selectors)
-    const groups = [
-      ['row1_col1', 'row1_col2'],
-      ['row2_col1', 'row2_col2'],
-      ['row3_col1', 'row3_col2'],
-      ['row4_col1', 'row4_col2'], // Main images
-      ['row5_col1', 'row5_col2']  // Secondary images
-    ];
+    const groups = [
+      ['row1_col1', 'row1_col2'],
+      ['row2_col1', 'row2_col2'],
+      ['row3_col1', 'row3_col2'],
+      ['row4_col1', 'row4_col2'],
+      ['row5_col1', 'row5_col2']
+    ];
 
-    groups.forEach((pair, i) => {
-      const [idx1, idx2] = pair.map(getSelectedIndex);
-      if (idx1 === null && idx2 === null) return;
+    groups.forEach((pair, i) => {
+      const [idx1, idx2] = pair.map(getSelectedIndex);
+      if (idx1 === null && idx2 === null) return;
 
-      // Create the table container
-      const table = document.createElement('table');
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      const tbody = document.createElement('tbody');
+      const trData = document.createElement('tr');
 
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
+      [idx1, idx2].forEach((idx, j) => {
+        const th = document.createElement('th');
+        const td = document.createElement('td');
 
-      const tbody = document.createElement('tbody');
-      const trData = document.createElement('tr');
-
-      [idx1, idx2].forEach((idx, j) => {
-        const th = document.createElement('th');
-        const td = document.createElement('td');
-
-        if (idx !== null) {
-          th.textContent = headers[idx];
-          let val = row[idx] ?? '';
-
-          if (i === 3 || i === 4) {
+        if (idx !== null) {
+          th.textContent = headers[idx];
+          let val = row[idx] ?? '';
+;
+if (i === 3 || i === 4) {
   try {
     let urls = [];
+
+    // Normalize input
     const trimmedVal = typeof val === 'string' ? val.trim() : '';
 
+    // Try parsing JSON array
     if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-      const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-        const items = inner.split(',').map(s => {
-          const trimmed = s.trim();
-          return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
-        });
-        return `[${items.join(',')}]`;
-      });
-      urls = JSON.parse(fixedVal);
+      try {
+        const fixedVal = trimmedVal.replace(/'/g, '"');
+        urls = JSON.parse(fixedVal);
+      } catch (e) {
+        console.warn('Failed to parse JSON array:', e);
+      }
     } else if (trimmedVal.includes(',')) {
       urls = trimmedVal.split(',').map(url => url.trim());
     } else if (trimmedVal) {
       urls = [trimmedVal];
     }
 
-    // ✅ Clean and encode URLs
+    // Clean and encode URLs
     urls = urls.map(url => {
       try {
         const u = new URL(url.trim());
@@ -240,6 +274,7 @@ const originalIndex = excelData.indexOf(row);
       }
     }).filter(Boolean);
 
+    // Convert to HTTPS-safe URLs
     const getSafeImageUrl = (url) => {
       if (url.startsWith('https://')) return url;
       const cleanUrl = url.replace(/^http:\/\//i, '');
@@ -258,6 +293,7 @@ const originalIndex = excelData.indexOf(row);
         urls.forEach((url, index) => {
           const img = document.createElement('img');
           img.src = getSafeImageUrl(url);
+          
           img.style.width = '350px';
           img.style.height = '350px';
           img.style.objectFit = 'contain';
@@ -270,6 +306,7 @@ const originalIndex = excelData.indexOf(row);
           img.addEventListener('click', () => openModal(urls, index));
           container.appendChild(img);
         });
+
         td.appendChild(container);
       } else {
         const grid = document.createElement('div');
@@ -285,6 +322,7 @@ const originalIndex = excelData.indexOf(row);
           img.addEventListener('click', () => openModal(urls, imageIndex));
           grid.appendChild(img);
         });
+
         td.appendChild(grid);
       }
     } else {
@@ -300,29 +338,31 @@ const originalIndex = excelData.indexOf(row);
   td.textContent = val;
 }
 
-        } else {
-          th.textContent = '';
-          td.textContent = '';
-        }
 
-        trHead.appendChild(th);
-        trData.appendChild(td);
-      });
+        
+    } else {
+          th.textContent = '';
+          td.textContent = '';
+        }
 
-      thead.appendChild(trHead);
-      tbody.appendChild(trData);
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-    });
+        trHead.appendChild(th);
+        trData.appendChild(td);
+      });
 
-    fragment.appendChild(wrapper);
-    mainContainer.appendChild(fragment);
+      thead.appendChild(trHead);
+      tbody.appendChild(trData);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+    });
 
- highlightWords();
+    fragment.appendChild(wrapper);
+  });
 
+  mainContainer.appendChild(fragment);
+  highlightWords();
+}
 
-  }
 
 function highlightWords() {
   const keywords = {
@@ -331,7 +371,7 @@ function highlightWords() {
     adults: /\b(adults?|grown[- ]?ups?)\b/gi,
     female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
     unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-    others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package)\b/gi
+    others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|pcs|weight|made|Made| Pk |Pc |Pcs |Ct |Count|Pack|Piece)\b/gi
   };
 
   const mainContainer = document.getElementById('mainContainer');
@@ -520,3 +560,282 @@ jumpBtn.addEventListener('click', () => {
     alert(`Row number must be between 2 and ${excelData.length + 1}`);
   }
 });
+
+
+let isScrollView = false;
+
+const toggleViewBtn = document.getElementById('toggleViewBtn');
+
+toggleViewBtn.addEventListener('click', () => {
+  isScrollView = !isScrollView;
+
+  const content = document.getElementById('content');
+  const mainContainer = document.getElementById('mainContainer');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const pageInfo = document.getElementById('pageInfo');
+
+  if (isScrollView) {
+    // Switch to scroll view
+    mainContainer.style.display = 'none';
+    content.style.display = 'block';
+
+    renderAllRows(); // Make sure this function is defined and working
+
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    pageInfo.style.display = 'none';
+    toggleViewBtn.textContent = 'Switch to Paginated View';
+  } else {
+    // Switch to paginated view
+    content.style.display = 'none';
+    mainContainer.style.display = 'block';
+
+    currentPage = 0;
+    renderPage(); // Make sure this function is defined and working
+    updatePageInfo();
+    updateNavButtons();
+
+    prevBtn.style.display = '';
+    nextBtn.style.display = '';
+    pageInfo.style.display = '';
+    toggleViewBtn.textContent = 'Switch to Scroll View';
+  }
+});
+
+
+
+function renderAllRows() {
+  const content = document.getElementById('content');
+  content.innerHTML = ''; // Clear existing content
+
+  const fragment = document.createDocumentFragment();
+
+  filteredData.forEach((row, pageIndex) => {
+    const originalIndex = excelData.indexOf(row);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-block';
+
+    const title = document.createElement('div');
+    title.className = 'row-block-title';
+title.textContent = `Excel Row #${originalIndex + 2} (${pageIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+    wrapper.appendChild(title);
+
+    const groups = [
+      ['row1_col1', 'row1_col2'],
+      ['row2_col1', 'row2_col2'],
+      ['row3_col1', 'row3_col2'],
+      ['row4_col1', 'row4_col2'],
+      ['row5_col1', 'row5_col2']
+    ];
+
+    groups.forEach((pair, i) => {
+      const [idx1, idx2] = pair.map(getSelectedIndex);
+      if (idx1 === null && idx2 === null) return;
+
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      const tbody = document.createElement('tbody');
+      const trData = document.createElement('tr');
+
+      [idx1, idx2].forEach((idx) => {
+        const th = document.createElement('th');
+        const td = document.createElement('td');
+
+        if (idx !== null) {
+          th.textContent = headers[idx];
+          let val = row[idx] ?? '';
+
+          if (i === 3 || i === 4) {
+            try {
+              let urls = [];
+              const trimmedVal = typeof val === 'string' ? val.trim() : '';
+
+              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+                try {
+                  const fixedVal = trimmedVal.replace(/'/g, '"');
+                  urls = JSON.parse(fixedVal);
+                } catch (e) {
+                  console.warn('Failed to parse JSON array:', e);
+                }
+              } else if (trimmedVal.includes(',')) {
+                urls = trimmedVal.split(',').map(url => url.trim());
+              } else if (trimmedVal) {
+                urls = [trimmedVal];
+              }
+
+              urls = urls.map(url => {
+                try {
+                  const u = new URL(url.trim());
+                  const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
+                  return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
+                } catch (e) {
+                  console.warn('Invalid URL skipped:', url);
+                  return null;
+                }
+              }).filter(Boolean);
+
+              const getSafeImageUrl = (url) => {
+                if (url.startsWith('https://')) return url;
+                const cleanUrl = url.replace(/^http:\/\//i, '');
+                return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+              };
+
+              if (urls.length) {
+                if (i === 3) {
+                  const container = document.createElement('div');
+                  container.style.display = 'flex';
+                  container.style.justifyContent = 'space-between';
+                  container.style.gap = '10px';
+
+                  urls.forEach((url, index) => {
+                    const img = document.createElement('img');
+                    img.src = getSafeImageUrl(url);
+                    img.style.width = '350px';
+                    img.style.height = '350px';
+                    img.style.objectFit = 'contain';
+                    img.style.cursor = 'pointer';
+                    img.alt = `Main Image ${index + 1}`;
+                    img.onerror = () => {
+                      img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
+                    };
+                    img.addEventListener('click', () => openModal(urls, index));
+                    container.appendChild(img);
+                  });
+
+                  td.appendChild(container);
+                } else {
+                  const grid = document.createElement('div');
+                  grid.className = 'image-grid';
+
+                  urls.forEach((url, imageIndex) => {
+                    const img = document.createElement('img');
+                    img.src = getSafeImageUrl(url);
+                    img.alt = `Secondary Image ${imageIndex + 1}`;
+                    img.onerror = () => {
+                      img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                    };
+                    img.addEventListener('click', () => openModal(urls, imageIndex));
+                    grid.appendChild(img);
+                  });
+
+                  td.appendChild(grid);
+                }
+              } else {
+                td.textContent = val;
+              }
+            } catch (e) {
+              console.error('Image parsing error:', e);
+              td.textContent = val;
+            }
+          } else if (/<[a-z][\s\S]*>/i.test(val)) {
+            td.innerHTML = val;
+          } else {
+            td.textContent = val;
+          }
+
+        } else {
+          th.textContent = '';
+          td.textContent = '';
+        }
+
+        trHead.appendChild(th);
+        trData.appendChild(td);
+      });
+
+      thead.appendChild(trHead);
+      tbody.appendChild(trData);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+    });
+
+    fragment.appendChild(wrapper);
+  });
+
+  content.appendChild(fragment);
+  bindImageClickEvents();
+  highlightWords();
+}
+
+
+document.getElementById('scrollToggleBtn').addEventListener('click', () => {
+  isScrollView = !isScrollView;
+  document.getElementById('scrollToggleBtn').textContent = isScrollView 
+    ? 'Switch to Paginated View' 
+    : 'Switch to Scroll View';
+  renderPage(); // Re-render based on new mode
+});
+function highlightWords() {
+  const keywords = {
+    kids: /\b(kids?|children|child)\b/gi,
+    teens: /\b(teens?|teenagers?)\b/gi,
+    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+    others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|pcs|weight|made|Made)\b/gi
+  };
+
+  const container = isScrollView
+  ? document.getElementById('content')
+  : document.getElementById('mainContainer');
+const elements = container.querySelectorAll('td');
+
+
+  const ageToggle = document.getElementById('highlightToggle').checked;
+  const genderToggle = document.getElementById('genderHighlightToggle').checked;
+    const othersToggle = document.getElementById('othersHighlightToggle').checked;
+
+
+  elements.forEach(td => {
+    if (td.querySelector('img')) return;
+
+    let html = td.innerHTML;
+
+    if (ageToggle) {
+      html = html
+        .replace(keywords.kids, match => `<span class="highlight-kids">${match}</span>`)
+        .replace(keywords.teens, match => `<span class="highlight-teens">${match}</span>`)
+        .replace(keywords.adults, match => `<span class="highlight-adults">${match}</span>`);
+    }
+
+   if (genderToggle) {
+  // Highlight female first
+  html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
+    html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
+
+
+html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
+  const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
+  if (before === "wo") {
+    // don't highlight if preceded by "wo" (part of women)
+    return match;
+  }
+
+  const after = fullText.slice(offset + match.length, offset + match.length + 1);
+  if (apostrophePart || !after || /\W/.test(after)) {
+    // highlight if followed by apostrophe part or non-word boundary (standalone men)
+    return `<span class="highlight-male">${match}</span>`;
+  }
+  
+  return match; // part of bigger word, don't highlight
+});
+
+}
+ if (othersToggle) {
+      html = html
+        .replace(keywords.others, match => `<span class="highlight-others">${match}</span>`)
+       
+    }
+
+    td.innerHTML = html;
+  });
+}
+
+
+
+document.getElementById('highlightToggle').addEventListener('change', highlightWords);
+document.getElementById('genderHighlightToggle').addEventListener('change', highlightWords);
+document.getElementById('othersHighlightToggle').addEventListener('change', highlightWords);
+
