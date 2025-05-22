@@ -7,6 +7,22 @@ let filteredData = [];
 let selectedFilterInfo = '';
 let isScrollView = false; // Add this if missing
 
+const addSpinnerCSS = () => {
+  if (!document.getElementById('spinner-css')) {
+    const style = document.createElement('style');
+    style.id = 'spinner-css';
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: auto; }
+    `;
+    document.head.appendChild(style);
+  }
+};
+addSpinnerCSS(); 
+
 const selectorsIds = [
   'row1_col1','row1_col2',
   'row2_col1','row2_col2',
@@ -341,7 +357,7 @@ function renderPage() {
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-title.textContent = `Excel Row #${originalIndex + 2}(${originalIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+title.textContent = `Excel Row #${originalIndex + 2}(${currentIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
     wrapper.appendChild(title);
 
     const groups = [
@@ -844,7 +860,7 @@ function renderAllRows() {
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-title.textContent = `Excel Row #${originalIndex + 2} (${pageIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+title.textContent = `Excel Row #${originalIndex + 2} (${currentIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
     wrapper.appendChild(title);
 
     const groups = [
