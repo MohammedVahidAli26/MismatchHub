@@ -209,80 +209,97 @@ const originalIndex = excelData.indexOf(row);
           let val = row[idx] ?? '';
 
           if (i === 3 || i === 4) {
-            // Rows 4 and 5 are images (main and secondary)
-            try {
-              // Handle val as JSON array string or normal URL string
-              let urls = [];
-          
-const trimmedVal = val.trim();
+  try {
+    let urls = [];
+    const trimmedVal = typeof val === 'string' ? val.trim() : '';
 
-if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-  // Handle bracketed list (with or without quotes)
-  const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
-    const items = inner.split(',').map(s => {
-      const trimmed = s.trim();
-      return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
-    });
+    if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+      const fixedVal = trimmedVal.replace(/'/g, '"').replace(/\[([^\]]+)\]/, (_, inner) => {
+        const items = inner.split(',').map(s => {
+          const trimmed = s.trim();
+          return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed : `"${trimmed}"`;
+        });
+        return `[${items.join(',')}]`;
+      });
+      urls = JSON.parse(fixedVal);
+    } else if (trimmedVal.includes(',')) {
+      urls = trimmedVal.split(',').map(url => url.trim());
+    } else if (trimmedVal) {
+      urls = [trimmedVal];
+    }
 
-    return `[${items.join(',')}]`;
-  });
-  urls = JSON.parse(fixedVal);
-} else if (trimmedVal.includes(',')) {
-  // Handle plain comma-separated URLs (no brackets)
-  urls = trimmedVal.split(',').map(url => url.trim());
-} else if (trimmedVal) {
-  // Single URL
-  urls = [trimmedVal];
+    // ✅ Clean and encode URLs
+    urls = urls.map(url => {
+      try {
+        const u = new URL(url.trim());
+        const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
+        return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
+      } catch (e) {
+        console.warn('Invalid URL skipped:', url);
+        return null;
+      }
+    }).filter(Boolean);
+
+    const getSafeImageUrl = (url) => {
+      if (url.startsWith('https://')) return url;
+      const cleanUrl = url.replace(/^http:\/\//i, '');
+      return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+    };
+
+    td.textContent = ''; // Clear cell
+
+    if (urls.length) {
+      if (i === 3) {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.justifyContent = 'space-between';
+        container.style.gap = '10px';
+
+        urls.forEach((url, index) => {
+          const img = document.createElement('img');
+          img.src = getSafeImageUrl(url);
+          img.style.width = '350px';
+          img.style.height = '350px';
+          img.style.objectFit = 'contain';
+          img.style.cursor = 'pointer';
+          img.alt = `Main Image ${index + 1}`;
+          img.onerror = () => {
+            img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
+            console.warn('Image failed to load:', url);
+          };
+          img.addEventListener('click', () => openModal(urls, index));
+          container.appendChild(img);
+        });
+        td.appendChild(container);
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'image-grid';
+        urls.forEach((url, imageIndex) => {
+          const img = document.createElement('img');
+          img.src = getSafeImageUrl(url);
+          img.alt = `Secondary Image ${imageIndex + 1}`;
+          img.onerror = () => {
+            img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+            console.warn('Image failed to load:', url);
+          };
+          img.addEventListener('click', () => openModal(urls, imageIndex));
+          grid.appendChild(img);
+        });
+        td.appendChild(grid);
+      }
+    } else {
+      td.textContent = val;
+    }
+  } catch (e) {
+    console.error('Image parsing error:', e);
+    td.textContent = val;
+  }
+} else if (/<[a-z][\s\S]*>/i.test(val)) {
+  td.innerHTML = val;
+} else {
+  td.textContent = val;
 }
 
-
-              if (urls.length) {
-                // For Row 4 (main images) show first selector left, second right (side by side)
-                // For Row 5 (secondary images) show grid for each selector side by side
-                if (i === 3) {
-                  // Main images side by side
-                  const container = document.createElement('div');
-                  container.style.display = 'flex';
-                  container.style.justifyContent = 'space-between';
-                  container.style.gap = '10px';
-
-                  urls.forEach((url, index) => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.style.width = '350px';
-                    img.style.height = '350px';
-                    img.style.objectFit = 'contain';
-                    img.style.cursor = 'pointer';
-                    img.alt = `Main Image ${index + 1}`;
-                    img.addEventListener('click', () => openModal(urls, index));
-                    container.appendChild(img);
-                  });
-                  td.appendChild(container);
-                } else {
-                  // Secondary images: show grid
-                  const grid = document.createElement('div');
-                  grid.className = 'image-grid';
-                  urls.forEach((url, imageIndex) => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.alt = `Secondary Image ${imageIndex + 1}`;
-                    img.addEventListener('click', () => openModal(urls, imageIndex));
-                    grid.appendChild(img);
-                  });
-                  td.appendChild(grid);
-                }
-              } else {
-                td.textContent = val;
-              }
-            } catch(e) {
-              td.textContent = val;
-            }
-          } else if (/<[a-z][\s\S]*>/i.test(val)) {
-            // Render html for short and long desc
-            td.innerHTML = val;
-          } else {
-            td.textContent = val;
-          }
         } else {
           th.textContent = '';
           td.textContent = '';
