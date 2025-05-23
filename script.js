@@ -357,7 +357,7 @@ function renderPage() {
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-    title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
+title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
     wrapper.appendChild(title);
 
     const groups = [
@@ -385,164 +385,116 @@ function renderPage() {
         if (idx !== null) {
           th.textContent = headers[idx];
           let val = row[idx] ?? '';
-;
-if (i === 3 || i === 4) {
-  try {
-    let urls = [];
+;  if (i === 3 || i === 4) {
+            try {
+              let urls = [];
+              const trimmedVal = typeof val === 'string' ? val.trim() : '';
 
-    // Normalize input
-    const trimmedVal = typeof val === 'string' ? val.trim() : '';
+              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+                try {
+                  const fixedVal = trimmedVal.replace(/'/g, '"');
+                  urls = JSON.parse(fixedVal);
+                } catch (e) {
+                  console.warn('Failed to parse JSON array:', e);
+                }
+              } else if (trimmedVal.includes(',')) {
+                urls = trimmedVal.split(',').map(url => url.trim());
+              } else if (trimmedVal) {
+                urls = [trimmedVal];
+              }
 
-    // Try parsing JSON array
-    if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-      try {
-        const fixedVal = trimmedVal.replace(/'/g, '"');
-        urls = JSON.parse(fixedVal);
-      } catch (e) {
-        console.warn('Failed to parse JSON array:', e);
-      }
-    } else if (trimmedVal.includes(',')) {
-      urls = trimmedVal.split(',').map(url => url.trim());
-    } else if (trimmedVal) {
-      urls = [trimmedVal];
-    }
+              urls = urls.map(url => {
+                try {
+                  const u = new URL(url.trim());
+                  const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
+                  return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
+                } catch (e) {
+                  console.warn('Invalid URL skipped:', url);
+                  return null;
+                }
+              }).filter(Boolean);
 
-    // Clean and encode URLs
-    urls = urls.map(url => {
-      try {
-        const u = new URL(url.trim());
-        const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
-        return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
-      } catch (e) {
-        console.warn('Invalid URL skipped:', url);
-        return null;
-      }
-    }).filter(Boolean);
+              const getSafeImageUrl = (url) => {
+                if (url.startsWith('https://')) return url;
+                const cleanUrl = url.replace(/^http:\/\//i, '');
+                return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+              };
 
-    // Convert to HTTPS-safe URLs
-  const getSafeImageUrl = (url) => {
-  try {
-    // If already HTTPS, return as-is
-    if (url.startsWith('https://')) return url;
-    
-    // For HTTP URLs, convert to HTTPS directly first
-    if (url.startsWith('http://')) {
-      const httpsUrl = url.replace(/^http:\/\//i, 'https://');
-      return httpsUrl;
-    }
-    
-    // If no protocol, assume HTTPS
-    if (!url.startsWith('http')) {
-      return `https://${url}`;
-    }
-    
-    return url;
-  } catch (e) {
-    console.warn('URL processing failed:', url, e);
-    return url;
-  }
-};const getSafeImageUrlWithProxy = (url) => {
-  try {
-    // If already HTTPS, return as-is
-    if (url.startsWith('https://')) return url;
-    
-    // For HTTP URLs, try direct HTTPS first
-    if (url.startsWith('http://')) {
-      return url.replace(/^http:\/\//i, 'https://');
-    }
-    
-    // If no protocol, assume HTTPS
-    return url.startsWith('http') ? url : `https://${url}`;
-    
-  } catch (e) {
-    // Fallback to proxy only if needed
-    console.warn('Direct HTTPS failed, using proxy:', url);
-    const cleanUrl = url.replace(/^https?:\/\//i, '');
-    return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
-  }
-};
+              if (urls.length) {
+                if (i === 3) {
+                  const container = document.createElement('div');
+                  container.style.display = 'flex';
+                  container.style.justifyContent = 'space-between';
+                  container.style.gap = '10px';
 
+                  urls.forEach((url, index) => {
+                    const img = document.createElement('img');
+                    img.src = getSafeImageUrl(url);
+                    img.style.width = '350px';
+                    img.style.height = '350px';
+                    img.style.objectFit = 'contain';
+                    img.style.cursor = 'pointer';
+                    img.alt = `Main Image ${index + 1}`;
+                    img.onerror = () => {
+                      img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
+                    };
+                    img.addEventListener('click', () => openModal(urls, index));
+                    container.appendChild(img);
+                  });
 
-    td.textContent = ''; // Clear cell
+                  td.appendChild(container);
+                } else {
+                  const grid = document.createElement('div');
+                  grid.className = 'image-grid';
 
-    if (urls.length) {
-      if (i === 3) {
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
-        container.style.gap = '10px';
+                  urls.forEach((url, imageIndex) => {
+                    const img = document.createElement('img');
+                    img.src = getSafeImageUrl(url);
+                    img.alt = `Secondary Image ${imageIndex + 1}`;
+                    img.onerror = () => {
+                      img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                    };
+                    img.addEventListener('click', () => openModal(urls, imageIndex));
+                    grid.appendChild(img);
+                  });
 
-        urls.forEach((url, index) => {
-          const img = document.createElement('img');
-          img.src = getSafeImageUrl(url);
-          
-          img.style.width = '350px';
-          img.style.height = '350px';
-          img.style.objectFit = 'contain';
-          img.style.cursor = 'pointer';
-          img.alt = `Main Image ${index + 1}`;
-          img.onerror = () => {
-            img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
-            console.warn('Image failed to load:', url);
-          };
-          img.addEventListener('click', () => openModal(urls, index));
-          container.appendChild(img);
-        });
+                  td.appendChild(grid);
+                }
+              } else {
+                td.textContent = val;
+              }
+            } catch (e) {
+              console.error('Image parsing error:', e);
+              td.textContent = val;
+            }
+          } else if (/<[a-z][\s\S]*>/i.test(val)) {
+            td.innerHTML = val;
+          } else {
+            td.textContent = val;
+          }
 
-        td.appendChild(container);
-      } else {
-        const grid = document.createElement('div');
-        grid.className = 'image-grid';
-        urls.forEach((url, imageIndex) => {
-          const img = document.createElement('img');
-          img.src = getSafeImageUrl(url);
-          img.alt = `Secondary Image ${imageIndex + 1}`;
-          img.onerror = () => {
-            img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-            console.warn('Image failed to load:', url);
-          };
-          img.addEventListener('click', () => openModal(urls, imageIndex));
-          grid.appendChild(img);
-        });
+        } else {
+          th.textContent = '';
+          td.textContent = '';
+        }
 
-        td.appendChild(grid);
-      }
-    } else {
-      td.textContent = val;
-    }
-  } catch (e) {
-    console.error('Image parsing error:', e);
-    td.textContent = val;
-  }
-} else if (/<[a-z][\s\S]*>/i.test(val)) {
-  td.innerHTML = val;
-} else {
-  td.textContent = val;
-}
+        trHead.appendChild(th);
+        trData.appendChild(td);
+      });
 
+      thead.appendChild(trHead);
+      tbody.appendChild(trData);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+    });
 
-        
-    } else {
-          th.textContent = '';
-          td.textContent = '';
-        }
+    fragment.appendChild(wrapper);
+  });
 
-        trHead.appendChild(th);
-        trData.appendChild(td);
-      });
-
-      thead.appendChild(trHead);
-      tbody.appendChild(trData);
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-    });
-
-    fragment.appendChild(wrapper);
-  });
-
-  mainContainer.appendChild(fragment);
-  highlightWords();
+  content.appendChild(fragment);
+  bindImageClickEvents();
+  highlightWords();
 }
 
 
@@ -860,7 +812,7 @@ function renderAllRows() {
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-title.textContent = `Excel Row #${originalIndex + 2} (${currentIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+title.textContent = `Excel Row #${originalIndex + 2} (${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
     wrapper.appendChild(title);
 
     const groups = [
