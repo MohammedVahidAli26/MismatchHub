@@ -1,3 +1,4 @@
+
 let excelData = [];
 let headers = [];
 let currentPage = 0;
@@ -338,53 +339,53 @@ function getSelectedIndex(selectId) {
 }
 
 function renderPage() {
-  const mainContainer = document.getElementById('mainContainer');
-  mainContainer.innerHTML = '';
-  const fragment = document.createDocumentFragment();
+  const mainContainer = document.getElementById('mainContainer');
+  mainContainer.innerHTML = '';
+  const fragment = document.createDocumentFragment();
 
-  if (!filteredData.length) {
-    fragment.appendChild(document.createTextNode('No data loaded'));
-    mainContainer.appendChild(fragment);
-    return;
-  }
+  if (!filteredData.length) {
+    fragment.appendChild(document.createTextNode('No data loaded'));
+    mainContainer.appendChild(fragment);
+    return;
+  }
 
-  const pagesToRender = isScrollView ? filteredData : [filteredData[currentPage]];
+  const pagesToRender = isScrollView ? filteredData : [filteredData[currentPage]];
 
-  pagesToRender.forEach((row, pageIndex) => {
-    const originalIndex = excelData.indexOf(row);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'table-block';
+  pagesToRender.forEach((row, pageIndex) => {
+    const originalIndex = excelData.indexOf(row);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-block';
 
-    const title = document.createElement('div');
-    title.className = 'row-block-title';
+    const title = document.createElement('div');
+    title.className = 'row-block-title';
 title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
-    wrapper.appendChild(title);
+    wrapper.appendChild(title);
 
-    const groups = [
-      ['row1_col1', 'row1_col2'],
-      ['row2_col1', 'row2_col2'],
-      ['row3_col1', 'row3_col2'],
-      ['row4_col1', 'row4_col2'],
-      ['row5_col1', 'row5_col2']
-    ];
+    const groups = [
+      ['row1_col1', 'row1_col2'],
+      ['row2_col1', 'row2_col2'],
+      ['row3_col1', 'row3_col2'],
+      ['row4_col1', 'row4_col2'],
+      ['row5_col1', 'row5_col2']
+    ];
 
-    groups.forEach((pair, i) => {
-      const [idx1, idx2] = pair.map(getSelectedIndex);
-      if (idx1 === null && idx2 === null) return;
+    groups.forEach((pair, i) => {
+      const [idx1, idx2] = pair.map(getSelectedIndex);
+      if (idx1 === null && idx2 === null) return;
 
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      const tbody = document.createElement('tbody');
-      const trData = document.createElement('tr');
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      const tbody = document.createElement('tbody');
+      const trData = document.createElement('tr');
 
-      [idx1, idx2].forEach((idx, j) => {
-        const th = document.createElement('th');
-        const td = document.createElement('td');
+      [idx1, idx2].forEach((idx, j) => {
+        const th = document.createElement('th');
+        const td = document.createElement('td');
 
-        if (idx !== null) {
-          th.textContent = headers[idx];
-          let val = row[idx] ?? '';
+        if (idx !== null) {
+          th.textContent = headers[idx];
+          let val = row[idx] ?? '';
 ;  if (i === 3 || i === 4) {
             try {
               let urls = [];
