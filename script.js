@@ -551,7 +551,7 @@ const keywords = {
   kids: /\b(kids?|children|child)\b/gi,
   teens: /\b(teens?|teenagers?)\b/gi,
   adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+  female: /\b(girl|girls|woman|women|womens|female|her|she|man|men|boys|boy)\b/gi,
   male: /\b(boy|boys|man|men|male|his|he)\b/gi,
   unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
   others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
