@@ -357,7 +357,7 @@ function renderPage() {
 
     const title = document.createElement('div');
     title.className = 'row-block-title';
-    title.textContent = `Excel Row #${originalIndex + 2}(${currentIndex + 1} / ${filteredData.length})${selectedFilterInfo}`;
+    title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
     wrapper.appendChild(title);
 
     const groups = [
