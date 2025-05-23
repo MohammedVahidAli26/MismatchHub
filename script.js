@@ -547,16 +547,15 @@ if (i === 3 || i === 4) {
 
 
 function highlightWords() {
-const keywords = {
-  kids: /\b(kids?|children|child)\b/gi,
-  teens: /\b(teens?|teenagers?)\b/gi,
-  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-  female: /\b(girl|girls|woman|women|womens|female|her|she|man|men|boys|boy)\b/gi,
-  male: /\b(boy|boys|man|men|male|his|he)\b/gi,
-  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-  others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-};
-
+  const keywords = {
+    kids: /\b(kids?|children|child)\b/gi,
+    teens: /\b(teens?|teenagers?)\b/gi,
+    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+    male: /\b(Man|Male|boy)\b/gi,
+others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+  };
 
   const mainContainer = document.getElementById('mainContainer');
   const elements = mainContainer.querySelectorAll('td');
@@ -578,32 +577,29 @@ const keywords = {
         .replace(keywords.adults, match => `<span class="highlight-adults">${match}</span>`);
     }
 
-  if (genderToggle) {
+   if (genderToggle) {
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
-  html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
-      html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+    html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
 
 
-  // Custom logic for "men"
-  html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
-    const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
-    if (before === "wo") {
-      return match; // skip if part of "women"
-    }
-
-    const after = fullText.slice(offset + match.length, offset + match.length + 1);
-    if (apostrophePart || !after || /\W/.test(after)) {
-      return `<span class="highlight-male">${match}</span>`;
-    }
-
+html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
+  const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
+  if (before === "wo") {
+    // don't highlight if preceded by "wo" (part of women)
     return match;
-  });
+  }
 
-  // Add highlighting for "man" and "boy"
-  html = html.replace(/\b(man|boy|boys)\b/gi, match => `<span class="highlight-male">${match}</span>`);
+  const after = fullText.slice(offset + match.length, offset + match.length + 1);
+  if (apostrophePart || !after || /\W/.test(after)) {
+    // highlight if followed by apostrophe part or non-word boundary (standalone men)
+    return `<span class="highlight-male">${match}</span>`;
+  }
+  
+  return match; // part of bigger word, don't highlight
+});
+
 }
-
  if (othersToggle) {
       html = html
         .replace(keywords.others, match => `<span class="highlight-others">${match}</span>`)
