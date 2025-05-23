@@ -578,31 +578,30 @@ const keywords = {
         .replace(keywords.adults, match => `<span class="highlight-adults">${match}</span>`);
     }
 
-   if (genderToggle) {
+  if (genderToggle) {
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
-    html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
-    html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
-     
+  html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
 
+  // Custom logic for "men"
+  html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
+    const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
+    if (before === "wo") {
+      return match; // skip if part of "women"
+    }
 
-html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
-  const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
-  if (before === "wo") {
-    // don't highlight if preceded by "wo" (part of women)
+    const after = fullText.slice(offset + match.length, offset + match.length + 1);
+    if (apostrophePart || !after || /\W/.test(after)) {
+      return `<span class="highlight-male">${match}</span>`;
+    }
+
     return match;
-  }
+  });
 
-  const after = fullText.slice(offset + match.length, offset + match.length + 1);
-  if (apostrophePart || !after || /\W/.test(after)) {
-    // highlight if followed by apostrophe part or non-word boundary (standalone men)
-    return `<span class="highlight-male">${match}</span>`;
-  }
-  
-  return match; // part of bigger word, don't highlight
-});
-
+  // Add highlighting for "man" and "boy"
+  html = html.replace(/\b(man|boy|boys)\b/gi, match => `<span class="highlight-male">${match}</span>`);
 }
+
  if (othersToggle) {
       html = html
         .replace(keywords.others, match => `<span class="highlight-others">${match}</span>`)
