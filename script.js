@@ -553,6 +553,7 @@ function highlightWords() {
     adults: /\b(adults?|grown[- ]?ups?)\b/gi,
     female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
     unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+    male: /\b(Man|Male|boy)\b/gi,
 others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
   };
 
