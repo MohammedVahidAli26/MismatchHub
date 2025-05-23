@@ -582,6 +582,8 @@ const keywords = {
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
   html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
+      html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+
 
   // Custom logic for "men"
   html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
