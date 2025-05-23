@@ -547,15 +547,16 @@ if (i === 3 || i === 4) {
 
 
 function highlightWords() {
-  const keywords = {
-    kids: /\b(kids?|children|child)\b/gi,
-    teens: /\b(teens?|teenagers?)\b/gi,
-    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
-    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-    male: /\b(Man|Male|boy)\b/gi,
-others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-  };
+const keywords = {
+  kids: /\b(kids?|children|child)\b/gi,
+  teens: /\b(teens?|teenagers?)\b/gi,
+  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+  male: /\b(boy|boys|man|men|male|his|he)\b/gi,
+  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+  others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+};
+
 
   const mainContainer = document.getElementById('mainContainer');
   const elements = mainContainer.querySelectorAll('td');
@@ -581,6 +582,8 @@ others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
     html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
+    html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+     
 
 
 html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
