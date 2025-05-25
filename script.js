@@ -23,6 +23,273 @@ const addSpinnerCSS = () => {
 };
 addSpinnerCSS(); 
 
+
+
+// Add the V loading indicator CSS and HTML
+const addVLoadingIndicator = () => {
+  // Add CSS styles if not already added
+  if (!document.getElementById('v-loading-css')) {
+    const style = document.createElement('style');
+    style.id = 'v-loading-css';
+    style.textContent = `
+      .v-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: 'Arial', sans-serif;
+      }
+
+      .v-loading-overlay::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        opacity: 0.8;
+      }
+
+      .v-loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .v-loading-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      }
+
+      .v-loading-container::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+        animation: glass-shimmer 3s ease-in-out infinite;
+      }
+
+      .v-loader {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .v-letter {
+        font-size: 48px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.9);
+        z-index: 2;
+        position: relative;
+        animation: v-pulse 2s ease-in-out infinite;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      }
+
+      .v-spinner {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top: 3px solid rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        animation: v-spin 1s linear infinite;
+      }
+
+      .v-outer-ring {
+        position: absolute;
+        width: 140px;
+        height: 140px;
+        border: 2px solid transparent;
+        border-top: 2px solid rgba(255, 255, 255, 0.4);
+        border-right: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: v-spin-reverse 2s linear infinite;
+        top: -10px;
+        left: -10px;
+      }
+
+      .v-dots {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .v-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        animation: v-dot-rotate 2s linear infinite;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      }
+
+      .v-dot:nth-child(1) { transform: rotate(0deg) translateX(60px); animation-delay: 0s; }
+      .v-dot:nth-child(2) { transform: rotate(120deg) translateX(60px); animation-delay: -0.67s; }
+      .v-dot:nth-child(3) { transform: rotate(240deg) translateX(60px); animation-delay: -1.33s; }
+
+      .v-loading-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+        font-weight: 500;
+        animation: v-fade 2s ease-in-out infinite;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        z-index: 1;
+      }
+
+      .v-glow {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: v-glow-pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes v-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes v-spin-reverse {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(-360deg); }
+      }
+
+      @keyframes v-pulse {
+        0%, 100% { 
+          transform: scale(1);
+          color: rgba(255, 255, 255, 0.9);
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        50% { 
+          transform: scale(1.1);
+          color: rgba(255, 255, 255, 1);
+          text-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+        }
+      }
+
+      @keyframes v-dot-rotate {
+        0% { 
+          transform: rotate(0deg) translateX(60px) scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: rotate(180deg) translateX(60px) scale(0.8);
+          opacity: 0.7;
+        }
+        100% { 
+          transform: rotate(360deg) translateX(60px) scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes v-fade {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes v-glow-pulse {
+        0%, 100% { 
+          transform: scale(1);
+          opacity: 0.3;
+        }
+        50% { 
+          transform: scale(1.2);
+          opacity: 0.6;
+        }
+      }
+
+      @keyframes glass-shimmer {
+        0%, 100% { 
+          transform: translateX(-100%) translateY(-100%) rotate(0deg);
+        }
+        50% { 
+          transform: translateX(0%) translateY(0%) rotate(180deg);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+// Show V loading indicator
+const showVLoading = () => {
+  // Remove existing loader if any
+  const existingLoader = document.getElementById('v-loading-overlay');
+  if (existingLoader) {
+    existingLoader.remove();
+  }
+
+  // Create loading overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'v-loading-overlay';
+  overlay.className = 'v-loading-overlay';
+  
+  overlay.innerHTML = `
+    <div class="v-loading-container">
+      <div class="v-loader">
+        <div class="v-glow"></div>
+        <div class="v-outer-ring"></div>
+        <div class="v-spinner"></div>
+        <div class="v-dots">
+          <div class="v-dot"></div>
+          <div class="v-dot"></div>
+          <div class="v-dot"></div>
+        </div>
+        <div class="v-letter">V</div>
+      </div>
+      <div class="v-loading-text">Processing Excel file...</div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+};
+
+// Hide V loading indicator
+const hideVLoading = () => {
+  const overlay = document.getElementById('v-loading-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease-out';
+    setTimeout(() => {
+      overlay.remove();
+    }, 300);
+  }
+};
+
+
 const selectorsIds = [
   'row1_col1','row1_col2',
   'row2_col1','row2_col2',
@@ -68,9 +335,14 @@ updateTogglePosition();
 
 document.getElementById('fileInput').addEventListener('change', handleFile);
 
+// Modified handleFile function with V loading indicator
 function handleFile(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // Add CSS and show loading indicator
+  addVLoadingIndicator();
+  showVLoading();
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -88,9 +360,15 @@ function handleFile(event) {
     populateSelectors();
     populateFilterOptions();
     
-    // ✅ KEY FIX: Apply data processing after everything is set up
+    // Apply data processing after everything is set up
     applyDataProcessing();
+
+    // Hide loading indicator after 5 seconds
+    setTimeout(() => {
+      hideVLoading();
+    }, 5000);
   };
+  
   reader.readAsArrayBuffer(file);
 }
 
