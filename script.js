@@ -7,6 +7,9 @@ let filteredData = [];
 let selectedFilterInfo = '';
 let isScrollView = false; // Add this if missing
 
+
+
+
 const addSpinnerCSS = () => {
   if (!document.getElementById('spinner-css')) {
     const style = document.createElement('style');
@@ -246,7 +249,23 @@ const addVLoadingIndicator = () => {
 
 // Show V loading indicator
 const showVLoading = () => {
-  // Remove existing loader if any
+
+  const funnyQuotes = [
+  "Progress: 1% code, 99% hope.",
+  "Send answers, not feedback",
+  "Don’t worry, I Googled it first.",
+  "If you found a bug, keep it. It’s yours now.",
+  "Ctrl + Alt + Del your expectations",
+  "Build by Mohammed. Because someone had to do it.",
+  "Powered by panic and last-minute fixes.",
+  "Please wait. We’re arguing with the browser.",
+  "If it works, it’s a miracle. If it doesn’t, it’s a feature.",
+  "Website by Vahid. Because someone had to press ‘Deploy’ and run.",
+  "Hold tight. We forgot what to do."
+];
+
+const randomQuote = funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)];
+
   const existingLoader = document.getElementById('v-loading-overlay');
   if (existingLoader) {
     existingLoader.remove();
@@ -270,7 +289,7 @@ const showVLoading = () => {
         </div>
         <div class="v-letter">V</div>
       </div>
-      <div class="v-loading-text">Processing Excel file...</div>
+<div class="v-loading-text">${randomQuote}</div>
     </div>
   `;
   
@@ -366,7 +385,7 @@ function handleFile(event) {
     // Hide loading indicator after 5 seconds
     setTimeout(() => {
       hideVLoading();
-    }, 5000);
+    }, 9000);
   };
   
   reader.readAsArrayBuffer(file);
