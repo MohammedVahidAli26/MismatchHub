@@ -257,7 +257,6 @@ const showVLoading = () => {
   "If you found a bug, keep it. It’s yours now.",
   "Ctrl + Alt + Del your expectations",
   "Build by Mohammed. Because someone had to do it.",
-  "Powered by panic and last-minute fixes.",
   "Please wait. We’re arguing with the browser.",
   "If it works, it’s a miracle. If it doesn’t, it’s a feature.",
 ];
