@@ -253,7 +253,6 @@ const showVLoading = () => {
   const funnyQuotes = [
   "Progress: 1% code, 99% hope.",
   "Send answers, not feedback",
-  "Don’t worry, I Googled it first.",
   "If you found a bug, keep it. It’s yours now.",
   "Ctrl + Alt + Del your expectations",
   "Build by Mohammed. Because someone had to do it.",
@@ -803,14 +802,16 @@ title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filt
 
 
 function highlightWords() {
-  const keywords = {
-    kids: /\b(kids?|children|child)\b/gi,
-    teens: /\b(teens?|teenagers?)\b/gi,
-    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
-    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-  };
+ const keywords = {
+  kids: /\b(kids?|children|child)\b/gi,
+  teens: /\b(teens?|teenagers?)\b/gi,
+  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
+  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+  others: /\b(color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+};
+
 
   const mainContainer = document.getElementById('mainContainer');
   const elements = mainContainer.querySelectorAll('td');
@@ -833,6 +834,8 @@ others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|
     }
 
    if (genderToggle) {
+        html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
     html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
@@ -871,9 +874,6 @@ html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullTex
   document.getElementById('genderHighlightToggle').addEventListener('change', () => {
   renderPage();
 });
-
-
-
    // Modal functions
   const modal = document.getElementById('modal');
   const modalImage = document.getElementById('modalImage');
@@ -1275,14 +1275,16 @@ document.getElementById('scrollToggleBtn').addEventListener('click', () => {
 
 
 function highlightWords() {
-  const keywords = {
-    kids: /\b(kids?|children|child)\b/gi,
-    teens: /\b(teens?|teenagers?)\b/gi,
-    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
-    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-others: /\b(color|colors|colour|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-  };
+ const keywords = {
+  kids: /\b(kids?|children|child)\b/gi,
+  teens: /\b(teens?|teenagers?)\b/gi,
+  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
+  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+  others: /\b(color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+};
+
 
   const container = isScrollView
   ? document.getElementById('content')
@@ -1308,6 +1310,8 @@ const elements = container.querySelectorAll('td');
     }
 
    if (genderToggle) {
+           html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+
   // Highlight female first
   html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
     html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
