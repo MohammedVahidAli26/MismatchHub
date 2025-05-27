@@ -809,7 +809,7 @@ function highlightWords() {
   female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
 male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
   unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-  others: /\b(color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+  others: /\b(as shown|As Shown|shown|color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
 };
 
 
@@ -1282,7 +1282,7 @@ function highlightWords() {
   female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
 male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
   unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-  others: /\b(color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
+  others: /\b(as shown|As Shown|shown|color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
 };
 
 
