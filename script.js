@@ -260,7 +260,6 @@ const showVLoading = () => {
   "Powered by panic and last-minute fixes.",
   "Please wait. We’re arguing with the browser.",
   "If it works, it’s a miracle. If it doesn’t, it’s a feature.",
-  "Hold tight. We forgot what to do."
 ];
 
 const randomQuote = funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)];
