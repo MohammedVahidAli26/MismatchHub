@@ -686,18 +686,25 @@ title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filt
               let urls = [];
               const trimmedVal = typeof val === 'string' ? val.trim() : '';
 
-              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-                try {
-                  const fixedVal = trimmedVal.replace(/'/g, '"');
-                  urls = JSON.parse(fixedVal);
-                } catch (e) {
-                  console.warn('Failed to parse JSON array:', e);
-                }
-              } else if (trimmedVal.includes(',')) {
-                urls = trimmedVal.split(',').map(url => url.trim());
-              } else if (trimmedVal) {
-                urls = [trimmedVal];
-              }
+             if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+  try {
+    const fixedVal = trimmedVal.replace(/'/g, '"');
+    // Try parsing as JSON array first
+    urls = JSON.parse(fixedVal);
+  } catch (e) {
+    // If JSON parsing fails, try extracting Markdown-style single URL
+    const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
+    if (markdownUrl) {
+      urls = [markdownUrl[1]];
+    } else {
+      console.warn('Failed to parse JSON or Markdown-style URL:', e);
+    }
+  }
+} else if (trimmedVal.includes(',')) {
+  urls = trimmedVal.split(',').map(url => url.trim());
+} else if (trimmedVal) {
+  urls = [trimmedVal];
+}
 
               urls = urls.map(url => {
                 try {
@@ -1143,18 +1150,25 @@ title.textContent = `Excel Row #${originalIndex + 2}${selectedFilterInfo}`;
               let urls = [];
               const trimmedVal = typeof val === 'string' ? val.trim() : '';
 
-              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-                try {
-                  const fixedVal = trimmedVal.replace(/'/g, '"');
-                  urls = JSON.parse(fixedVal);
-                } catch (e) {
-                  console.warn('Failed to parse JSON array:', e);
-                }
-              } else if (trimmedVal.includes(',')) {
-                urls = trimmedVal.split(',').map(url => url.trim());
-              } else if (trimmedVal) {
-                urls = [trimmedVal];
-              }
+             if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
+  try {
+    const fixedVal = trimmedVal.replace(/'/g, '"');
+    // Try parsing as JSON array first
+    urls = JSON.parse(fixedVal);
+  } catch (e) {
+    // If JSON parsing fails, try extracting Markdown-style single URL
+    const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
+    if (markdownUrl) {
+      urls = [markdownUrl[1]];
+    } else {
+      console.warn('Failed to parse JSON or Markdown-style URL:', e);
+    }
+  }
+} else if (trimmedVal.includes(',')) {
+  urls = trimmedVal.split(',').map(url => url.trim());
+} else if (trimmedVal) {
+  urls = [trimmedVal];
+}
 
               urls = urls.map(url => {
                 try {
