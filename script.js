@@ -252,12 +252,20 @@ const showVLoading = () => {
 
   const funnyQuotes = [
   "Progress: 1% code, 99% hope.",
-  "Send answers, not feedback",
+
+
   "If you found a bug, keep it. It’s yours now.",
+
   "Ctrl + Alt + Del your expectations",
-  "Build by Mohammed. Because someone had to do it.",
-  "Please wait. We’re arguing with the browser.",
-  "If it works, it’s a miracle. If it doesn’t, it’s a feature.",
+
+
+"Almost there... then the real pain begins.",
+"Uploading… hope you love puzzles and unpaid hours.",
+
+"Uploading… pray it doesn’t trigger an escalation email.",
+
+"Uploading… no clue what’s in it, but it’s your problem now"
+
 ];
 
 const randomQuote = funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)];
@@ -801,25 +809,91 @@ title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filt
 }
 
 
+
 function highlightWords() {
- const keywords = {
-  kids: /\b(kids?|children|child)\b/gi,
-  teens: /\b(teens?|teenagers?)\b/gi,
-  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
-male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
-  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-  others: /\b(as shown|As Shown|shown|color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-};
+   const keywords = {
+    kids: /\b(kids?|children|child)\b/gi,
+    teens: /\b(teens?|teenagers?)\b/gi,
+    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+    male: /\b(male|boy|boys|him|he)\b/gi, // Removed man/men from here
+    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+    others: /\b(as shown|As Shown|as the picture shows|color|colors|colour|Crewneck|neck|Sleeve|sleeves|sleeveless|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Pieceshort[- ]?sleeve|short[- ]?sleeved|shortsleeve|long[- ]?sleeve|long[- ]?sleeved|longsleeve|crew[- ]?neck|round[- ]?neck|v[- ]?neck|vneck)\b|(?<=\d\s?)(pcs?|ct)\b/gi
+  };
 
 
-  const mainContainer = document.getElementById('mainContainer');
-  const elements = mainContainer.querySelectorAll('td');
+   // Icon mappings
+  const icons = {
+    
+    
+    // Other icons
+    color: '🎨',
+    colors: '🎨',
+    colour: '🎨',
+    colours: '🎨',
+    size: '📏',
+    dimensions: '📐',
+    dimension: '📐',
+    weight: '⚖️',
+    material: '🧱',
+    materials: '🧱',
+    package: '📦',
+    made: '🏭',
+    count: '🔢',
+    pack: '📦',
+    piece: '🧩',
+    pcs: '🔢',
+    pc: '🔢',
+    ct: '🔢',
+    pk: '📦',
+    'as the picture shows': '👁️',
+    'as shown': '👁️',
+    'As Shown': '👁️',
+    includes: '📋',
+    author: '✍️',
+    origin: '🌍',
+        neck: '👔',
+    sleeve: '👕',
+    sleeves: '👕',
+    sleeveless: '🎽',
+    'short sleeve': '👕',
+    'short-sleeve': '👕',
+    'short sleeved': '👕',
+    'short-sleeved': '👕',
+    'shortsleeve': '👕',
+    'long sleeve': '🧥',
+    'long-sleeve': '🧥',
+    'long sleeved': '🧥',
+    'long-sleeved': '🧥',
+    'longsleeve': '🧥',
+    'crew neck': '⭕',
+    'crew-neck': '⭕',
+    'round neck': '⭕',
+    'round-neck': '⭕',
+    'v neck': '🔽',
+    'v-neck': '🔽',
+    'vneck': '🔽'
+  };
+
+  
+  function getIconForWord(word) {
+    const lowerWord = word.toLowerCase().replace(/[^\w\s-]/g, '');
+    return icons[lowerWord] || '';
+  }
+
+  function createHighlightSpan(className, text) {
+    const icon = getIconForWord(text);
+    return `<span class="${className}">${icon}${text}</span>`;
+  }
+
+  const container = isScrollView
+    ? document.getElementById('content')
+    : document.getElementById('mainContainer');
+  const elements = container.querySelectorAll('td');
 
   const ageToggle = document.getElementById('highlightToggle').checked;
   const genderToggle = document.getElementById('genderHighlightToggle').checked;
-    const othersToggle = document.getElementById('othersHighlightToggle').checked;
-
+  const othersToggle = document.getElementById('othersHighlightToggle').checked;
 
   elements.forEach(td => {
     if (td.querySelector('img')) return;
@@ -828,46 +902,39 @@ male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
 
     if (ageToggle) {
       html = html
-        .replace(keywords.kids, match => `<span class="highlight-kids">${match}</span>`)
-        .replace(keywords.teens, match => `<span class="highlight-teens">${match}</span>`)
-        .replace(keywords.adults, match => `<span class="highlight-adults">${match}</span>`);
+        .replace(keywords.kids, match => createHighlightSpan('highlight-kids', match))
+        .replace(keywords.teens, match => createHighlightSpan('highlight-teens', match))
+        .replace(keywords.adults, match => createHighlightSpan('highlight-adults', match));
     }
 
-   if (genderToggle) {
-        html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+    if (genderToggle) {
+      // Highlight male keywords (excluding man/men)
+      html = html.replace(keywords.male, match => createHighlightSpan('highlight-male', match));
 
-  // Highlight female first
-  html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
-    html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
+      // Highlight female first
+      html = html.replace(keywords.female, match => createHighlightSpan('highlight-female', match));
+      html = html.replace(keywords.unisex, match => createHighlightSpan('highlight-unisex', match));
 
+      // Special handling for man/men to avoid conflicts with women
+      html = html.replace(/\b(men|man)('s|'s)?\b/gi, (match, word, apostrophePart, offset, fullText) => {
+        const before = fullText.slice(offset - 2, offset).toLowerCase();
+        if (before === "wo") {
+          // Don't highlight if preceded by "wo" (part of women)
+          return match;
+        }
+        
+        // Highlight if it's a standalone word
+        return createHighlightSpan('highlight-male', match);
+      });
+    }
 
-html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
-  const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
-  if (before === "wo") {
-    // don't highlight if preceded by "wo" (part of women)
-    return match;
-  }
-
-  const after = fullText.slice(offset + match.length, offset + match.length + 1);
-  if (apostrophePart || !after || /\W/.test(after)) {
-    // highlight if followed by apostrophe part or non-word boundary (standalone men)
-    return `<span class="highlight-male">${match}</span>`;
-  }
-  
-  return match; // part of bigger word, don't highlight
-});
-
-}
- if (othersToggle) {
-      html = html
-        .replace(keywords.others, match => `<span class="highlight-others">${match}</span>`)
-       
+    if (othersToggle) {
+      html = html.replace(keywords.others, match => createHighlightSpan('highlight-others', match));
     }
 
     td.innerHTML = html;
   });
 }
-
   document.getElementById('highlightToggle').addEventListener('change', () => {
     renderPage();
   });
@@ -1275,27 +1342,88 @@ document.getElementById('scrollToggleBtn').addEventListener('click', () => {
 
 
 function highlightWords() {
- const keywords = {
-  kids: /\b(kids?|children|child)\b/gi,
-  teens: /\b(teens?|teenagers?)\b/gi,
-  adults: /\b(adults?|grown[- ]?ups?)\b/gi,
-  female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
-male: /\b(male|man|men(?!tion)|boy|boys|him|he)\b/gi,
-  unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
-  others: /\b(as shown|As Shown|shown|color|colors|colour|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Piece)\b|(?<=\b\d\s?)(pcs?|ct)\b/gi
-};
+   const keywords = {
+    kids: /\b(kids?|children|child)\b/gi,
+    teens: /\b(teens?|teenagers?)\b/gi,
+    adults: /\b(adults?|grown[- ]?ups?)\b/gi,
+    female: /\b(girl|girls|woman|women|womens|female|her|she)\b/gi,
+    male: /\b(male|boy|boys|him|he)\b/gi, // Removed man/men from here
+    unisex: /\b(unisex|any gender|all genders|gender-neutral)\b/gi,
+    others: /\b(as shown|As Shown|as the picture shows|color|colors|colour|Crewneck|neck|Sleeve|sleeves|sleeveless|Author|Origin|colours|dimensions|dimension|materials|material|size|includes|package|weight|made|Made|Pk|Count|Pack|Pieceshort[- ]?sleeve|short[- ]?sleeved|shortsleeve|long[- ]?sleeve|long[- ]?sleeved|longsleeve|crew[- ]?neck|round[- ]?neck|v[- ]?neck|vneck)\b|(?<=\d\s?)(pcs?|ct)\b/gi
+  };
 
+
+   // Icon mappings
+  const icons = {
+    
+    
+    // Other icons
+    color: '🎨',
+    colors: '🎨',
+    colour: '🎨',
+    colours: '🎨',
+    size: '📏',
+    dimensions: '📐',
+    dimension: '📐',
+    weight: '⚖️',
+    material: '🧱',
+    materials: '🧱',
+    package: '📦',
+    made: '🏭',
+    count: '🔢',
+    pack: '📦',
+    piece: '🧩',
+    pcs: '🔢',
+    pc: '🔢',
+    ct: '🔢',
+    pk: '📦',
+    'as the picture shows': '👁️',
+    'as shown': '👁️',
+    'As Shown': '👁️',
+    includes: '📋',
+    author: '✍️',
+    origin: '🌍',
+        neck: '👔',
+    sleeve: '👕',
+    sleeves: '👕',
+    sleeveless: '🎽',
+    'short sleeve': '👕',
+    'short-sleeve': '👕',
+    'short sleeved': '👕',
+    'short-sleeved': '👕',
+    'shortsleeve': '👕',
+    'long sleeve': '🧥',
+    'long-sleeve': '🧥',
+    'long sleeved': '🧥',
+    'long-sleeved': '🧥',
+    'longsleeve': '🧥',
+    'crew neck': '⭕',
+    'crew-neck': '⭕',
+    'round neck': '⭕',
+    'round-neck': '⭕',
+    'v neck': '🔽',
+    'v-neck': '🔽',
+    'vneck': '🔽'
+  };
+
+  function getIconForWord(word) {
+    const lowerWord = word.toLowerCase().replace(/[^\w\s-]/g, '');
+    return icons[lowerWord] || '';
+  }
+
+  function createHighlightSpan(className, text) {
+    const icon = getIconForWord(text);
+    return `<span class="${className}">${icon}${text}</span>`;
+  }
 
   const container = isScrollView
-  ? document.getElementById('content')
-  : document.getElementById('mainContainer');
-const elements = container.querySelectorAll('td');
-
+    ? document.getElementById('content')
+    : document.getElementById('mainContainer');
+  const elements = container.querySelectorAll('td');
 
   const ageToggle = document.getElementById('highlightToggle').checked;
   const genderToggle = document.getElementById('genderHighlightToggle').checked;
-    const othersToggle = document.getElementById('othersHighlightToggle').checked;
-
+  const othersToggle = document.getElementById('othersHighlightToggle').checked;
 
   elements.forEach(td => {
     if (td.querySelector('img')) return;
@@ -1304,40 +1432,34 @@ const elements = container.querySelectorAll('td');
 
     if (ageToggle) {
       html = html
-        .replace(keywords.kids, match => `<span class="highlight-kids">${match}</span>`)
-        .replace(keywords.teens, match => `<span class="highlight-teens">${match}</span>`)
-        .replace(keywords.adults, match => `<span class="highlight-adults">${match}</span>`);
+        .replace(keywords.kids, match => createHighlightSpan('highlight-kids', match))
+        .replace(keywords.teens, match => createHighlightSpan('highlight-teens', match))
+        .replace(keywords.adults, match => createHighlightSpan('highlight-adults', match));
     }
 
-   if (genderToggle) {
-           html = html.replace(keywords.male, match => `<span class="highlight-male">${match}</span>`);
+    if (genderToggle) {
+      // Highlight male keywords (excluding man/men)
+      html = html.replace(keywords.male, match => createHighlightSpan('highlight-male', match));
 
-  // Highlight female first
-  html = html.replace(keywords.female, match => `<span class="highlight-female">${match}</span>`);
-    html = html.replace(keywords.unisex, match => `<span class="highlight-unisex">${match}</span>`);
+      // Highlight female first
+      html = html.replace(keywords.female, match => createHighlightSpan('highlight-female', match));
+      html = html.replace(keywords.unisex, match => createHighlightSpan('highlight-unisex', match));
 
+      // Special handling for man/men to avoid conflicts with women
+      html = html.replace(/\b(men|man)('s|'s)?\b/gi, (match, word, apostrophePart, offset, fullText) => {
+        const before = fullText.slice(offset - 2, offset).toLowerCase();
+        if (before === "wo") {
+          // Don't highlight if preceded by "wo" (part of women)
+          return match;
+        }
+        
+        // Highlight if it's a standalone word
+        return createHighlightSpan('highlight-male', match);
+      });
+    }
 
-html = html.replace(/men(’s|'s)?\b/gi, (match, apostrophePart, offset, fullText) => {
-  const before = fullText.slice(offset - 2, offset).toLowerCase(); // 2 chars before "men"
-  if (before === "wo") {
-    // don't highlight if preceded by "wo" (part of women)
-    return match;
-  }
-
-  const after = fullText.slice(offset + match.length, offset + match.length + 1);
-  if (apostrophePart || !after || /\W/.test(after)) {
-    // highlight if followed by apostrophe part or non-word boundary (standalone men)
-    return `<span class="highlight-male">${match}</span>`;
-  }
-  
-  return match; // part of bigger word, don't highlight
-});
-
-}
- if (othersToggle) {
-      html = html
-        .replace(keywords.others, match => `<span class="highlight-others">${match}</span>`)
-       
+    if (othersToggle) {
+      html = html.replace(keywords.others, match => createHighlightSpan('highlight-others', match));
     }
 
     td.innerHTML = html;
