@@ -1151,3 +1151,10 @@ input:checked + .slider:before {
     border: 2px solid var(--border-color);
   }
 }
+
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
