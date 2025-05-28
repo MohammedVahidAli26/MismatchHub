@@ -639,173 +639,451 @@ function getSelectedIndex(selectId) {
 }
 
 function renderPage() {
-  const mainContainer = document.getElementById('mainContainer');
-  mainContainer.innerHTML = '';
-  const fragment = document.createDocumentFragment();
+  const mainContainer = document.getElementById('mainContainer');
+  mainContainer.innerHTML = '';
+  const fragment = document.createDocumentFragment();
 
-  if (!filteredData.length) {
-    fragment.appendChild(document.createTextNode('No data loaded'));
-    mainContainer.appendChild(fragment);
-    return;
-  }
+  if (!filteredData.length) {
+    fragment.appendChild(document.createTextNode('No data loaded'));
+    mainContainer.appendChild(fragment);
+    return;
+  }
 
-  const pagesToRender = isScrollView ? filteredData : [filteredData[currentPage]];
+  const pagesToRender = isScrollView ? filteredData : [filteredData[currentPage]];
 
-  pagesToRender.forEach((row, pageIndex) => {
-    const originalIndex = excelData.indexOf(row);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'table-block';
+  pagesToRender.forEach((row, pageIndex) => {
+    const originalIndex = excelData.indexOf(row);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-block';
 
-    const title = document.createElement('div');
-    title.className = 'row-block-title';
-title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
-    wrapper.appendChild(title);
+    const title = document.createElement('div');
+    title.className = 'row-block-title';
+    title.textContent = `Excel Row #${originalIndex + 2}(${currentPage + 1} / ${filteredData.length})${selectedFilterInfo}`;
+    wrapper.appendChild(title);
 
-    const groups = [
-      ['row1_col1', 'row1_col2'],
-      ['row2_col1', 'row2_col2'],
-      ['row3_col1', 'row3_col2'],
-      ['row4_col1', 'row4_col2'],
-      ['row5_col1', 'row5_col2']
-    ];
+    const groups = [
+      ['row1_col1', 'row1_col2'],
+      ['row2_col1', 'row2_col2'],
+      ['row3_col1', 'row3_col2'],
+      ['row4_col1', 'row4_col2'],
+      ['row5_col1', 'row5_col2']
+    ];
 
-    groups.forEach((pair, i) => {
-      const [idx1, idx2] = pair.map(getSelectedIndex);
-      if (idx1 === null && idx2 === null) return;
+    groups.forEach((pair, i) => {
+      const [idx1, idx2] = pair.map(getSelectedIndex);
+      if (idx1 === null && idx2 === null) return;
 
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      const tbody = document.createElement('tbody');
-      const trData = document.createElement('tr');
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      const tbody = document.createElement('tbody');
+      const trData = document.createElement('tr');
 
-      [idx1, idx2].forEach((idx, j) => {
-        const th = document.createElement('th');
-        const td = document.createElement('td');
+      [idx1, idx2].forEach((idx, j) => {
+        const th = document.createElement('th');
+        const td = document.createElement('td');
 
-        if (idx !== null) {
-          th.textContent = headers[idx];
-          let val = row[idx] ?? '';
-;
-          
- if (i === 3 || i === 4) {
+        if (idx !== null) {
+          th.textContent = headers[idx];
+          let val = row[idx] ?? '';
+
+          // Helper function to safely render HTML content
+          const renderHtmlContent = (content, container) => {
+            try {
+              // Check if content looks like HTML
+              const htmlRegex = /<[^>]*>/;
+              if (typeof content === 'string' && htmlRegex.test(content)) {
+                // Create a temporary container to parse HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                
+                // Move all child nodes to the target container
+                while (tempDiv.firstChild) {
+                  container.appendChild(tempDiv.firstChild);
+                }
+              } else {
+                // Regular text content
+                container.textContent = content;
+              }
+            } catch (e) {
+              console.error('HTML parsing error:', e);
+              // Fallback to text content
+              container.textContent = content;
+            }
+          };
+
+          // Enhanced image URL processing section for your renderPage function
+          if (i === 3 || i === 4) {
             try {
               let urls = [];
               const trimmedVal = typeof val === 'string' ? val.trim() : '';
+              
+              // Store the completely original value before any processing
+              const originalValue = val;
 
-             if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-  try {
-    const fixedVal = trimmedVal.replace(/'/g, '"');
-    // Try parsing as JSON array first
-    urls = JSON.parse(fixedVal);
-  } catch (e) {
-    // If JSON parsing fails, try extracting Markdown-style single URL
-    const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
-    if (markdownUrl) {
-      urls = [markdownUrl[1]];
-    } else {
-      console.warn('Failed to parse JSON or Markdown-style URL:', e);
-    }
-  }
-} else if (trimmedVal.includes(',')) {
-  urls = trimmedVal.split(',').map(url => url.trim());
-} else if (trimmedVal) {
-  urls = [trimmedVal];
-}
-
-              urls = urls.map(url => {
+              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
                 try {
-                  const u = new URL(url.trim());
-                  const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
-                  return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
+                  const fixedVal = trimmedVal.replace(/'/g, '"');
+                  // Try parsing as JSON array first
+                  urls = JSON.parse(fixedVal);
                 } catch (e) {
-                  console.warn('Invalid URL skipped:', url);
-                  return null;
+                  // If JSON parsing fails, try extracting Markdown-style single URL
+                  const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
+                  if (markdownUrl) {
+                    urls = [markdownUrl[1]];
+                  } else {
+                    console.warn('Failed to parse JSON or Markdown-style URL:', e);
+                    // If all parsing fails, treat as single URL
+                    urls = [trimmedVal.slice(1, -1)]; // Remove brackets
+                  }
                 }
-              }).filter(Boolean);
+              } else if (trimmedVal.includes(',')) {
+                // Smart comma detection: only split if commas are likely URL separators
+                // Check if the string contains multiple http/https protocols
+                const httpCount = (trimmedVal.match(/https?:\/\//g) || []).length;
+                
+                if (httpCount > 1) {
+                  // Multiple URLs detected, split carefully
+                  urls = trimmedVal.split(/,\s*(?=https?:\/\/)/).map(url => url.trim());
+                } else if (httpCount === 1) {
+                  // Single URL that might contain commas as part of its structure
+                  urls = [trimmedVal];
+                } else {
+                  // No HTTP protocols found, split by comma (fallback)
+                  urls = trimmedVal.split(',').map(url => url.trim());
+                }
+              } else if (trimmedVal) {
+                urls = [trimmedVal];
+              }
 
-              const getSafeImageUrl = (url) => {
-                if (url.startsWith('https://')) return url;
-                const cleanUrl = url.replace(/^http:\/\//i, '');
-                return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+              // Create URL objects that preserve the EXACT original URLs
+              const urlObjects = urls.map(url => {
+                const cleanUrl = typeof url === 'string' ? url.trim() : String(url).trim();
+                return {
+                  original: cleanUrl,  // This is the exact URL from your file
+                  display: cleanUrl    // This is what we'll show to users
+                };
+              }).filter(urlObj => urlObj.original);
+
+              const getSafeImageUrl = (originalUrl) => {
+                // Fast, direct approach - try the most likely working URL first
+                if (originalUrl.startsWith('https://')) {
+                  return originalUrl;
+                }
+                
+                if (originalUrl.startsWith('http://')) {
+                  // For IP addresses and known working HTTP servers, try original first
+                  // For others, try HTTPS conversion
+                  const isIpAddress = /^http:\/\/\d+\.\d+\.\d+\.\d+/.test(originalUrl);
+                  
+                  if (isIpAddress) {
+                    // IP addresses rarely support HTTPS, so try original HTTP first
+                    return originalUrl;
+                  } else {
+                    // Try HTTPS version for domain names
+                    return originalUrl.replace('http://', 'https://');
+                  }
+                }
+                
+                // For URLs without protocol, assume HTTP and apply proxy
+                if (!originalUrl.startsWith('http')) {
+                  return `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}`;
+                }
+                
+                return originalUrl;
               };
 
-              if (urls.length) {
-                if (i === 3) {
+              // Streamlined error handling with smart fallbacks
+              const loadImageWithFallbacks = (img, originalUrl) => {
+                let fallbackAttempted = false;
+                
+                img.onerror = () => {
+                  if (!fallbackAttempted) {
+                    fallbackAttempted = true;
+                    
+                    // Smart fallback based on URL type
+                    if (originalUrl.startsWith('http://')) {
+                      const isIpAddress = /^http:\/\/\d+\.\d+\.\d+\.\d+/.test(originalUrl);
+                      
+                      if (isIpAddress) {
+                        // For IP addresses, try proxy service
+                        img.src = `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl.replace('http://', ''))}`;
+                      } else {
+                        // For domains, try original HTTP
+                        img.src = originalUrl;
+                      }
+                    } else if (originalUrl.startsWith('https://')) {
+                      // For HTTPS failures, try proxy
+                      img.src = `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl.replace('https://', ''))}`;
+                    } else {
+                      // Final fallback to placeholder
+                      if (i === 3) {
+                        img.src = 'https://via.placeholder.com/350x350/cccccc/666666?text=Image+Not+Available';
+                      } else {
+                        img.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=Not+Available';
+                      }
+                    }
+                  } else {
+                    // Second failure, show placeholder
+                    if (i === 3) {
+                      img.src = 'https://via.placeholder.com/350x350/cccccc/666666?text=Image+Not+Available';
+                    } else {
+                      img.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=Not+Available';
+                    }
+                  }
+                };
+                
+                // Set the initial src
+                img.src = getSafeImageUrl(originalUrl);
+              };
+
+              const createUrlDisplay = (urlObj, isSecondary = false) => {
+                const urlDisplay = document.createElement('div');
+                urlDisplay.className = 'original-url-display';
+                urlDisplay.style.cssText = `
+                  margin-top: ${isSecondary ? '3px' : '5px'}; 
+                  padding: ${isSecondary ? '4px' : '8px'}; 
+                  background: #f8f9fa; 
+                  border: 1px solid #dee2e6; 
+                  border-radius: ${isSecondary ? '3px' : '4px'}; 
+                  font-size: ${isSecondary ? '10px' : '11px'}; 
+                  ${isSecondary ? 'max-width: 150px;' : ''} 
+                  word-break: break-all;
+                `;
+                
+                const label = document.createElement('div');
+                label.textContent = 'Original URL:';
+                label.style.cssText = `font-weight: bold; margin-bottom: ${isSecondary ? '2px' : '3px'}; color: #495057;`;
+                
+                const link = document.createElement('a');
+                link.href = urlObj.original;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                
+                if (isSecondary && urlObj.display.length > 30) {
+                  link.textContent = urlObj.display.substring(0, 30) + '...';
+                  link.title = urlObj.display; // Show full URL on hover
+                } else {
+                  link.textContent = urlObj.display;
+                }
+                
+                link.style.cssText = `color: #007bff; text-decoration: underline; ${isSecondary ? 'font-size: 9px;' : ''}`;
+                
+                // Add protocol indicator for HTTP URLs
+                if (urlObj.original.startsWith('http://')) {
+                  const httpWarning = document.createElement('div');
+                  httpWarning.textContent = '⚠️ HTTP (insecure)';
+                  httpWarning.style.cssText = `
+                    font-size: ${isSecondary ? '8px' : '9px'}; 
+                    color: #dc3545; 
+                    margin-top: 2px;
+                    font-weight: bold;
+                  `;
+                  urlDisplay.appendChild(httpWarning);
+                }
+                
+                urlDisplay.appendChild(label);
+                urlDisplay.appendChild(link);
+                return urlDisplay;
+              };
+
+              if (urlObjects.length) {
+                if (i === 3) { // Main images
                   const container = document.createElement('div');
                   container.style.display = 'flex';
                   container.style.justifyContent = 'space-between';
                   container.style.gap = '10px';
 
-                  urls.forEach((url, index) => {
+                  urlObjects.forEach((urlObj, index) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = `
+                      position: relative;
+                      width: 350px;
+                      height: 350px;
+                      border: 1px solid #dee2e6;
+                      background: #f8f9fa;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                    `;
+                    
+                    // Create loading indicator
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loading-indicator';
+                    loadingIndicator.style.cssText = `
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      z-index: 2;
+                    `;
+                    
+                    const spinner = document.createElement('div');
+                    spinner.style.cssText = `
+                      width: 30px;
+                      height: 30px;
+                      border: 3px solid #e9ecef;
+                      border-top: 3px solid #007bff;
+                      border-radius: 50%;
+                      animation: spin 1s linear infinite;
+                    `;
+                    
+                    loadingIndicator.appendChild(spinner);
+                    
                     const img = document.createElement('img');
-                    img.src = getSafeImageUrl(url);
-                    img.style.width = '350px';
-                    img.style.height = '350px';
-                    img.style.objectFit = 'contain';
-                    img.style.cursor = 'pointer';
+                    img.style.cssText = `
+                      max-width: 100%;
+                      max-height: 100%;
+                      object-fit: contain;
+                      cursor: pointer;
+                      display: none;
+                    `;
                     img.alt = `Main Image ${index + 1}`;
-                    img.onerror = () => {
-                      img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
+                    
+                    // Container for the image and URL
+                    const imageAndUrlContainer = document.createElement('div');
+                    imageAndUrlContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+                    
+                    // Always show the original URL immediately
+                    const urlDisplay = createUrlDisplay(urlObj, false);
+                    
+                    img.onload = () => {
+                      // Hide loading indicator and show image
+                      loadingIndicator.style.display = 'none';
+                      img.style.display = 'block';
                     };
-                    img.addEventListener('click', () => openModal(urls, index));
-                    container.appendChild(img);
+                    
+                    img.addEventListener('click', () => openModal(urlObjects.map(u => u.original), index));
+                    
+                    // Fast loading - try most likely working URL first
+                    loadImageWithFallbacks(img, urlObj.original);
+                    
+                    imgContainer.appendChild(loadingIndicator);
+                    imgContainer.appendChild(img);
+                    
+                    imageAndUrlContainer.appendChild(imgContainer);
+                    imageAndUrlContainer.appendChild(urlDisplay);
+                    container.appendChild(imageAndUrlContainer);
                   });
 
                   td.appendChild(container);
-                } else {
+                  
+                } else { // Secondary images (i === 4)
                   const grid = document.createElement('div');
                   grid.className = 'image-grid';
 
-                  urls.forEach((url, imageIndex) => {
+                  urlObjects.forEach((urlObj, imageIndex) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = `
+                      display: inline-block; 
+                      margin: 5px; 
+                      vertical-align: top;
+                      position: relative;
+                      width: 250px;
+                      height: 250px;
+                      border: 1px solid #dee2e6;
+                      background: #f8f9fa;
+                    `;
+                    
+                    // Create loading indicator for secondary images
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loading-indicator-small';
+                    loadingIndicator.style.cssText = `
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      z-index: 2;
+                    `;
+                    
+                    const spinner = document.createElement('div');
+                    spinner.style.cssText = `
+                      width: 20px;
+                      height: 20px;
+                      border: 2px solid #e9ecef;
+                      border-top: 2px solid #007bff;
+                      border-radius: 50%;
+                      animation: spin 1s linear infinite;
+                    `;
+                    
+                    loadingIndicator.appendChild(spinner);
+                    
                     const img = document.createElement('img');
-                    img.src = getSafeImageUrl(url);
+                    img.style.cssText = `
+                      max-width: 100%; 
+                      max-height: 100%; 
+                      object-fit: contain; 
+                      cursor: pointer; 
+                      display: none;
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                    `;
                     img.alt = `Secondary Image ${imageIndex + 1}`;
-                    img.onerror = () => {
-                      img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                    
+                    // Container for the image and URL
+                    const imageAndUrlContainer = document.createElement('div');
+                    imageAndUrlContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+                    
+                    // Always show the original URL immediately for secondary images too
+                    const urlDisplay = createUrlDisplay(urlObj, true);
+                    
+                    img.onload = () => {
+                      // Hide loading indicator and show image
+                      loadingIndicator.style.display = 'none';
+                      img.style.display = 'block';
                     };
-                    img.addEventListener('click', () => openModal(urls, imageIndex));
-                    grid.appendChild(img);
+                    
+                    img.addEventListener('click', () => openModal(urlObjects.map(u => u.original), imageIndex));
+                    
+                    // Fast loading - try most likely working URL first
+                    loadImageWithFallbacks(img, urlObj.original);
+                    
+                    imgContainer.appendChild(loadingIndicator);
+                    imgContainer.appendChild(img);
+                    
+                    imageAndUrlContainer.appendChild(imgContainer);
+                    imageAndUrlContainer.appendChild(urlDisplay);
+                    grid.appendChild(imageAndUrlContainer);
                   });
 
                   td.appendChild(grid);
                 }
               } else {
-                td.textContent = val;
+                // If no URLs found, show the original value as text or HTML
+                renderHtmlContent(originalValue, td);
               }
             } catch (e) {
               console.error('Image parsing error:', e);
-              td.textContent = val;
+              // On any error, show the original value exactly as it was (with HTML support)
+              renderHtmlContent(val, td);
             }
-          } else if (/<[a-z][\s\S]*>/i.test(val)) {
-            td.innerHTML = val;
           } else {
-            td.textContent = val;
+            // For all other columns (non-image columns), render HTML content
+            renderHtmlContent(val, td);
           }
+        } else {
+          th.textContent = '';
+          td.textContent = '';
+        }
 
+        trHead.appendChild(th);
+        trData.appendChild(td);
+      });
 
-        
-    } else {
-          th.textContent = '';
-          td.textContent = '';
-        }
+      thead.appendChild(trHead);
+      tbody.appendChild(trData);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+    });
 
-        trHead.appendChild(th);
-        trData.appendChild(td);
-      });
+    fragment.appendChild(wrapper);
+  });
 
-      thead.appendChild(trHead);
-      tbody.appendChild(trData);
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-    });
-
-    fragment.appendChild(wrapper);
-  });
-
-  mainContainer.appendChild(fragment);
-  highlightWords();
+  mainContainer.appendChild(fragment);
+  highlightWords();
 }
 
 
@@ -1212,90 +1490,347 @@ title.textContent = `Excel Row #${originalIndex + 2}${selectedFilterInfo}`;
           th.textContent = headers[idx];
           let val = row[idx] ?? '';
 
+         // Enhanced image URL processing section for your renderPage function
           if (i === 3 || i === 4) {
             try {
               let urls = [];
               const trimmedVal = typeof val === 'string' ? val.trim() : '';
+              
+              // Store the completely original value before any processing
+              const originalValue = val;
 
-             if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
-  try {
-    const fixedVal = trimmedVal.replace(/'/g, '"');
-    // Try parsing as JSON array first
-    urls = JSON.parse(fixedVal);
-  } catch (e) {
-    // If JSON parsing fails, try extracting Markdown-style single URL
-    const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
-    if (markdownUrl) {
-      urls = [markdownUrl[1]];
-    } else {
-      console.warn('Failed to parse JSON or Markdown-style URL:', e);
-    }
-  }
-} else if (trimmedVal.includes(',')) {
-  urls = trimmedVal.split(',').map(url => url.trim());
-} else if (trimmedVal) {
-  urls = [trimmedVal];
-}
-
-              urls = urls.map(url => {
+              if (trimmedVal.startsWith('[') && trimmedVal.endsWith(']')) {
                 try {
-                  const u = new URL(url.trim());
-                  const encodedPath = u.pathname.split('/').map(encodeURIComponent).join('/');
-                  return `${u.protocol}//${u.host}${encodedPath}${u.search}`;
+                  const fixedVal = trimmedVal.replace(/'/g, '"');
+                  // Try parsing as JSON array first
+                  urls = JSON.parse(fixedVal);
                 } catch (e) {
-                  console.warn('Invalid URL skipped:', url);
-                  return null;
+                  // If JSON parsing fails, try extracting Markdown-style single URL
+                  const markdownUrl = trimmedVal.match(/^\[(https?:\/\/[^\]]+)\]$/);
+                  if (markdownUrl) {
+                    urls = [markdownUrl[1]];
+                  } else {
+                    console.warn('Failed to parse JSON or Markdown-style URL:', e);
+                    // If all parsing fails, treat as single URL
+                    urls = [trimmedVal.slice(1, -1)]; // Remove brackets
+                  }
                 }
-              }).filter(Boolean);
+              } else if (trimmedVal.includes(',')) {
+                // Smart comma detection: only split if commas are likely URL separators
+                // Check if the string contains multiple http/https protocols
+                const httpCount = (trimmedVal.match(/https?:\/\//g) || []).length;
+                
+                if (httpCount > 1) {
+                  // Multiple URLs detected, split carefully
+                  urls = trimmedVal.split(/,\s*(?=https?:\/\/)/).map(url => url.trim());
+                } else if (httpCount === 1) {
+                  // Single URL that might contain commas as part of its structure
+                  urls = [trimmedVal];
+                } else {
+                  // No HTTP protocols found, split by comma (fallback)
+                  urls = trimmedVal.split(',').map(url => url.trim());
+                }
+              } else if (trimmedVal) {
+                urls = [trimmedVal];
+              }
 
-              const getSafeImageUrl = (url) => {
-                if (url.startsWith('https://')) return url;
-                const cleanUrl = url.replace(/^http:\/\//i, '');
-                return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+              // Create URL objects that preserve the EXACT original URLs
+              const urlObjects = urls.map(url => {
+                const cleanUrl = typeof url === 'string' ? url.trim() : String(url).trim();
+                return {
+                  original: cleanUrl,  // This is the exact URL from your file
+                  display: cleanUrl    // This is what we'll show to users
+                };
+              }).filter(urlObj => urlObj.original);
+
+              const getSafeImageUrl = (originalUrl) => {
+                // Fast, direct approach - try the most likely working URL first
+                if (originalUrl.startsWith('https://')) {
+                  return originalUrl;
+                }
+                
+                if (originalUrl.startsWith('http://')) {
+                  // For IP addresses and known working HTTP servers, try original first
+                  // For others, try HTTPS conversion
+                  const isIpAddress = /^http:\/\/\d+\.\d+\.\d+\.\d+/.test(originalUrl);
+                  
+                  if (isIpAddress) {
+                    // IP addresses rarely support HTTPS, so try original HTTP first
+                    return originalUrl;
+                  } else {
+                    // Try HTTPS version for domain names
+                    return originalUrl.replace('http://', 'https://');
+                  }
+                }
+                
+                // For URLs without protocol, assume HTTP and apply proxy
+                if (!originalUrl.startsWith('http')) {
+                  return `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}`;
+                }
+                
+                return originalUrl;
               };
 
-              if (urls.length) {
-                if (i === 3) {
+              // Streamlined error handling with smart fallbacks
+              const loadImageWithFallbacks = (img, originalUrl) => {
+                let fallbackAttempted = false;
+                
+                img.onerror = () => {
+                  if (!fallbackAttempted) {
+                    fallbackAttempted = true;
+                    
+                    // Smart fallback based on URL type
+                    if (originalUrl.startsWith('http://')) {
+                      const isIpAddress = /^http:\/\/\d+\.\d+\.\d+\.\d+/.test(originalUrl);
+                      
+                      if (isIpAddress) {
+                        // For IP addresses, try proxy service
+                        img.src = `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl.replace('http://', ''))}`;
+                      } else {
+                        // For domains, try original HTTP
+                        img.src = originalUrl;
+                      }
+                    } else if (originalUrl.startsWith('https://')) {
+                      // For HTTPS failures, try proxy
+                      img.src = `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl.replace('https://', ''))}`;
+                    } else {
+                      // Final fallback to placeholder
+                      if (i === 3) {
+                        img.src = 'https://via.placeholder.com/350x350/cccccc/666666?text=Image+Not+Available';
+                      } else {
+                        img.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=Not+Available';
+                      }
+                    }
+                  } else {
+                    // Second failure, show placeholder
+                    if (i === 3) {
+                      img.src = 'https://via.placeholder.com/350x350/cccccc/666666?text=Image+Not+Available';
+                    } else {
+                      img.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=Not+Available';
+                    }
+                  }
+                };
+                
+                // Set the initial src
+                img.src = getSafeImageUrl(originalUrl);
+              };
+
+              const createUrlDisplay = (urlObj, isSecondary = false) => {
+                const urlDisplay = document.createElement('div');
+                urlDisplay.className = 'original-url-display';
+                urlDisplay.style.cssText = `
+                  margin-top: ${isSecondary ? '3px' : '5px'}; 
+                  padding: ${isSecondary ? '4px' : '8px'}; 
+                  background: #f8f9fa; 
+                  border: 1px solid #dee2e6; 
+                  border-radius: ${isSecondary ? '3px' : '4px'}; 
+                  font-size: ${isSecondary ? '10px' : '11px'}; 
+                  ${isSecondary ? 'max-width: 150px;' : ''} 
+                  word-break: break-all;
+                `;
+                
+                const label = document.createElement('div');
+                label.textContent = 'Original URL:';
+                label.style.cssText = `font-weight: bold; margin-bottom: ${isSecondary ? '2px' : '3px'}; color: #495057;`;
+                
+                const link = document.createElement('a');
+                link.href = urlObj.original;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                
+                if (isSecondary && urlObj.display.length > 30) {
+                  link.textContent = urlObj.display.substring(0, 30) + '...';
+                  link.title = urlObj.display; // Show full URL on hover
+                } else {
+                  link.textContent = urlObj.display;
+                }
+                
+                link.style.cssText = `color: #007bff; text-decoration: underline; ${isSecondary ? 'font-size: 9px;' : ''}`;
+                
+                // Add protocol indicator for HTTP URLs
+                if (urlObj.original.startsWith('http://')) {
+                  const httpWarning = document.createElement('div');
+                  httpWarning.textContent = '⚠️ HTTP (insecure)';
+                  httpWarning.style.cssText = `
+                    font-size: ${isSecondary ? '8px' : '9px'}; 
+                    color: #dc3545; 
+                    margin-top: 2px;
+                    font-weight: bold;
+                  `;
+                  urlDisplay.appendChild(httpWarning);
+                }
+                
+                urlDisplay.appendChild(label);
+                urlDisplay.appendChild(link);
+                return urlDisplay;
+              };
+
+              if (urlObjects.length) {
+                if (i === 3) { // Main images
                   const container = document.createElement('div');
                   container.style.display = 'flex';
                   container.style.justifyContent = 'space-between';
                   container.style.gap = '10px';
 
-                  urls.forEach((url, index) => {
+                  urlObjects.forEach((urlObj, index) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = `
+                      position: relative;
+                      width: 350px;
+                      height: 350px;
+                      border: 1px solid #dee2e6;
+                      background: #f8f9fa;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                    `;
+                    
+                    // Create loading indicator
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loading-indicator';
+                    loadingIndicator.style.cssText = `
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      z-index: 2;
+                    `;
+                    
+                    const spinner = document.createElement('div');
+                    spinner.style.cssText = `
+                      width: 30px;
+                      height: 30px;
+                      border: 3px solid #e9ecef;
+                      border-top: 3px solid #007bff;
+                      border-radius: 50%;
+                      animation: spin 1s linear infinite;
+                    `;
+                    
+                    loadingIndicator.appendChild(spinner);
+                    
                     const img = document.createElement('img');
-                    img.src = getSafeImageUrl(url);
-                    img.style.width = '350px';
-                    img.style.height = '350px';
-                    img.style.objectFit = 'contain';
-                    img.style.cursor = 'pointer';
+                    img.style.cssText = `
+                      max-width: 100%;
+                      max-height: 100%;
+                      object-fit: contain;
+                      cursor: pointer;
+                      display: none;
+                    `;
                     img.alt = `Main Image ${index + 1}`;
-                    img.onerror = () => {
-                      img.src = 'https://via.placeholder.com/350?text=Image+Not+Found';
+                    
+                    // Container for the image and URL
+                    const imageAndUrlContainer = document.createElement('div');
+                    imageAndUrlContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+                    
+                    // Always show the original URL immediately
+                    const urlDisplay = createUrlDisplay(urlObj, false);
+                    
+                    img.onload = () => {
+                      // Hide loading indicator and show image
+                      loadingIndicator.style.display = 'none';
+                      img.style.display = 'block';
                     };
-                    img.addEventListener('click', () => openModal(urls, index));
-                    container.appendChild(img);
+                    
+                    img.addEventListener('click', () => openModal(urlObjects.map(u => u.original), index));
+                    
+                    // Fast loading - try most likely working URL first
+                    loadImageWithFallbacks(img, urlObj.original);
+                    
+                    imgContainer.appendChild(loadingIndicator);
+                    imgContainer.appendChild(img);
+                    
+                    imageAndUrlContainer.appendChild(imgContainer);
+                    imageAndUrlContainer.appendChild(urlDisplay);
+                    container.appendChild(imageAndUrlContainer);
                   });
 
                   td.appendChild(container);
-                } else {
+                  
+                } else { // Secondary images (i === 4)
                   const grid = document.createElement('div');
                   grid.className = 'image-grid';
 
-                  urls.forEach((url, imageIndex) => {
+                  urlObjects.forEach((urlObj, imageIndex) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = `
+                      display: inline-block; 
+                      margin: 5px; 
+                      vertical-align: top;
+                      position: relative;
+                      width: 250px;
+                      height: 250px;
+                      border: 1px solid #dee2e6;
+                      background: #f8f9fa;
+                    `;
+                    
+                    // Create loading indicator for secondary images
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loading-indicator-small';
+                    loadingIndicator.style.cssText = `
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      z-index: 2;
+                    `;
+                    
+                    const spinner = document.createElement('div');
+                    spinner.style.cssText = `
+                      width: 20px;
+                      height: 20px;
+                      border: 2px solid #e9ecef;
+                      border-top: 2px solid #007bff;
+                      border-radius: 50%;
+                      animation: spin 1s linear infinite;
+                    `;
+                    
+                    loadingIndicator.appendChild(spinner);
+                    
                     const img = document.createElement('img');
-                    img.src = getSafeImageUrl(url);
+                    img.style.cssText = `
+                      max-width: 100%; 
+                      max-height: 100%; 
+                      object-fit: contain; 
+                      cursor: pointer; 
+                      display: none;
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                    `;
                     img.alt = `Secondary Image ${imageIndex + 1}`;
-                    img.onerror = () => {
-                      img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                    
+                    // Container for the image and URL
+                    const imageAndUrlContainer = document.createElement('div');
+                    imageAndUrlContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+                    
+                    // Always show the original URL immediately for secondary images too
+                    const urlDisplay = createUrlDisplay(urlObj, true);
+                    
+                    img.onload = () => {
+                      // Hide loading indicator and show image
+                      loadingIndicator.style.display = 'none';
+                      img.style.display = 'block';
                     };
-                    img.addEventListener('click', () => openModal(urls, imageIndex));
-                    grid.appendChild(img);
+                    
+                    img.addEventListener('click', () => openModal(urlObjects.map(u => u.original), imageIndex));
+                    
+                    // Fast loading - try most likely working URL first
+                    loadImageWithFallbacks(img, urlObj.original);
+                    
+                    imgContainer.appendChild(loadingIndicator);
+                    imgContainer.appendChild(img);
+                    
+                    imageAndUrlContainer.appendChild(imgContainer);
+                    imageAndUrlContainer.appendChild(urlDisplay);
+                    grid.appendChild(imageAndUrlContainer);
                   });
 
                   td.appendChild(grid);
                 }
               } else {
-                td.textContent = val;
+                // If no URLs found, show the original value as text or HTML
+                renderHtmlContent(originalValue, td);
               }
             } catch (e) {
               console.error('Image parsing error:', e);
